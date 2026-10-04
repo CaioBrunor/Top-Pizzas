@@ -1,6 +1,12 @@
-import { VERSAO_CATALOGO } from "../data/catalogo";
+import { useState } from "react";
+import { urlDaFoto } from "../lib/format";
+
 export default function FotoProduto({ produto, tamanho = "media" }) {
-  if (!produto.imagem) {
+  // Foto que não carrega (caminho errado ou sem internet e fora do cache)
+  // cai no mesmo marcador de produto sem foto.
+  const [quebrada, setQuebrada] = useState(null);
+
+  if (!produto.imagem || quebrada === produto.imagem) {
     return (
       <div className={`foto-vazia foto-vazia--${tamanho}`} role="presentation">
         <span className="foto-vazia__inicial">{produto.nome.charAt(0)}</span>
@@ -12,10 +18,11 @@ export default function FotoProduto({ produto, tamanho = "media" }) {
   return (
     <img
       className={`foto foto--${tamanho}`}
-      src={`${produto.imagem}?v=${VERSAO_CATALOGO}`}
+      src={urlDaFoto(produto.imagem)}
       alt={produto.nome}
       loading="lazy"
       decoding="async"
+      onError={() => setQuebrada(produto.imagem)}
     />
   );
 }

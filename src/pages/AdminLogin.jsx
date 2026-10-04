@@ -4,17 +4,28 @@ import { useAuth } from "../context/AuthContext";
 import { IconeCadeado, IconeVoltar } from "../components/Icones";
 
 export default function AdminLogin() {
-  const { entrar, autenticado, CREDENCIAIS } = useAuth();
+  const { entrar, autenticado } = useAuth();
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   if (autenticado) return <Navigate to="/admin/painel" replace />;
 
-  const enviar = (e) => {
+  const enviar = async (e) => {
     e.preventDefault();
-    const r = entrar(usuario, senha);
-    if (!r.ok) setErro(r.erro);
+    if (!usuario.trim() || !senha) {
+      setErro("Informe o usuário e a senha.");
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      await entrar(usuario, senha);
+    } catch (falha) {
+      setErro(falha.message);
+      setEnviando(false);
+    }
   };
 
   return (
@@ -32,6 +43,8 @@ export default function AdminLogin() {
             className="campo__entrada"
             value={usuario}
             autoComplete="username"
+            autoCapitalize="none"
+            maxLength={60}
             onChange={(e) => {
               setUsuario(e.target.value);
               setErro("");
@@ -46,6 +59,7 @@ export default function AdminLogin() {
             className="campo__entrada"
             value={senha}
             autoComplete="current-password"
+            maxLength={200}
             onChange={(e) => {
               setSenha(e.target.value);
               setErro("");
@@ -53,16 +67,19 @@ export default function AdminLogin() {
           />
         </label>
 
-        {erro && <p className="campo__erro">{erro}</p>}
+        {erro && (
+          <p className="campo__erro" role="alert">
+            {erro}
+          </p>
+        )}
 
-        <button type="submit" className="btn btn--ambar btn--bloco">
-          Entrar
+        <button
+          type="submit"
+          className="btn btn--ambar btn--bloco"
+          disabled={enviando}
+        >
+          {enviando ? "Entrando..." : "Entrar"}
         </button>
-
-        <p className="login__dica">
-          Login simulado. Use <code>{CREDENCIAIS.usuario}</code> e{" "}
-          <code>{CREDENCIAIS.senha}</code>.
-        </p>
 
         <Link to="/" className="btn btn--fantasma btn--pequeno">
           <IconeVoltar width={15} height={15} />

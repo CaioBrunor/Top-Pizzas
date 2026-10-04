@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { instalarApp, usePwa } from "../pwa/registrar";
+import { IconeBaixar } from "./Icones";
 
 export default function Rodape() {
+  const { instalavel } = usePwa();
+
   return (
     <footer className="rodape">
       <div className="wrap rodape__interno">
@@ -36,7 +40,26 @@ export default function Rodape() {
           <Link to="/admin" className="rodape__link">
             Painel administrativo
           </Link>
+          <br />
+          <Link to="/entregador" className="rodape__link">
+            Área do entregador
+          </Link>
         </div>
+
+        {/* Só aparece quando o navegador permite instalar o site como app. */}
+        {instalavel && (
+          <div className="rodape__bloco">
+            <p className="rodape__titulo">Aplicativo</p>
+            <button
+              type="button"
+              className="rodape__botao"
+              onClick={instalarApp}
+            >
+              <IconeBaixar width={16} height={16} />
+              Instalar o app
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="wrap rodape__base">

@@ -42,6 +42,38 @@
   margin-top: 0.2rem;
 }
 
+.admin__topo {
+  display: grid;
+  gap: 0.7rem;
+}
+
+/* Estado da conexão de tempo real com o servidor. */
+.admin__vivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.6rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.admin__vivo::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-faint);
+}
+
+.admin__vivo--ligado {
+  color: var(--success);
+}
+
+.admin__vivo--ligado::before {
+  background-color: var(--success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 22%, transparent);
+}
+
 .admin__nav {
   display: grid;
   gap: 0.2rem;
@@ -369,6 +401,10 @@
   color: var(--danger);
 }
 
+.tabela__data {
+  white-space: nowrap;
+}
+
 .produto-celula {
   display: flex;
   align-items: center;
@@ -459,6 +495,20 @@
   overflow: hidden;
 }
 
+/* Pedido que chegou pelo tempo real e ainda não foi aberto. */
+.pedido--novo {
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: 0 0 0 3px rgb(var(--brilho-rgb) / 0.14);
+}
+
+.pedido--novo .pedido__codigo::after {
+  content: "novo";
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  color: var(--text-strong);
+}
+
 .pedido__topo {
   display: grid;
   grid-template-columns: 82px minmax(0, 1.4fr) auto auto auto;
@@ -544,7 +594,18 @@
 .pedido__botoes {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+}
+
+/* Escolha de quem leva o pedido: ocupa a linha inteira, botões embaixo. */
+.pedido__entregador {
+  flex: 1 1 100%;
+}
+
+.pedido__entregador .campo__entrada {
+  padding-block: 0.55rem;
+  font-size: var(--step--1);
 }
 
 /* formulário */
@@ -812,6 +873,12 @@
   display: flex;
   gap: 0.2rem;
   justify-content: flex-end;
+}
+
+@media (min-width: 721px) {
+  .celula-pedidos {
+    flex-wrap: nowrap;
+  }
 }
 
 @media (max-width: 720px) {

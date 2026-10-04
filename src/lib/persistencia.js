@@ -21,3 +21,12 @@ export function limpar(chave) {
     window.localStorage.removeItem(PREFIXO + chave);
   } catch {}
 }
+
+// O evento "storage" só dispara nas outras abas, nunca na que fez a mudança.
+export function aoMudarEmOutraAba(chave, fn) {
+  const ouvir = (evento) => {
+    if (evento.key === null || evento.key === PREFIXO + chave) fn();
+  };
+  window.addEventListener("storage", ouvir);
+  return () => window.removeEventListener("storage", ouvir);
+}

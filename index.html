@@ -4,14 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0d0d0f" />
-    <meta name="description" content="Top Pizzas" />
+    <meta
+      name="description"
+      content="Pizzas de forno a lenha em Campina Grande. Peça pelo site e acompanhe o pedido em tempo real."
+    />
     <title>Top Pizzas</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <!-- PWA: permite instalar o site como aplicativo -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Top Pizzas" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- crossorigin deixa o service worker guardar a folha de fontes para o modo offline -->
     <link
       href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
+      crossorigin
     />
   </head>
   <body>

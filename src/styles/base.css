@@ -226,6 +226,16 @@ p {
   border-color: var(--danger);
 }
 
+.campo__entrada[readonly] {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.campo__ok {
+  font-size: var(--step--1);
+  color: var(--success);
+}
+
 /* selo/etiqueta */
 
 .selo {

@@ -119,6 +119,29 @@
   border-color: var(--text-muted);
 }
 
+.cabecalho__conta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--step--1);
+  color: var(--text-strong);
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  transition: border-color 0.18s var(--ease-forno);
+}
+
+.cabecalho__conta:hover {
+  border-color: var(--accent);
+}
+
+.cabecalho__conta-texto {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .carrinho-botao {
   position: relative;
   display: inline-flex;
@@ -158,6 +181,13 @@
   }
   .cabecalho__acoes {
     margin-left: auto;
+  }
+  /* No celular a conta vira só o ícone, do tamanho de um toque. */
+  .cabecalho__conta {
+    padding: 0.62rem;
+  }
+  .cabecalho__conta-texto {
+    display: none;
   }
 }
 

@@ -6,15 +6,47 @@ import {
   useMemo,
   useState,
 } from "react";
-import { BORDAS, TAMANHOS, TAXA_ENTREGA } from "../data/catalogo";
+import {
+  BORDAS,
+  TAMANHOS,
+  TAXA_ENTREGA,
+  calcularPrecoUnitario,
+} from "../data/catalogo";
 import { ler, gravar } from "../lib/persistencia";
+import { useLoja } from "./LojaContext";
 
 const CarrinhoContext = createContext(null);
 
 const chaveLinha = (produtoId, tamanho, borda, observacao) =>
   `${produtoId}|${tamanho}|${borda}|${observacao.trim().toLowerCase()}`;
 
+// O carrinho fica dias guardado no navegador e o cardápio muda nesse meio
+// tempo. Aqui cada linha é conferida com o cardápio atual: sai o que não
+// existe mais e o preço acompanha o do servidor.
+function conferirComCardapio(itens, produtos) {
+  let removidos = 0;
+  let alterados = 0;
+
+  const conferidos = itens.flatMap((item) => {
+    const produto = produtos.find((p) => p.id === item.produtoId);
+    const preco =
+      produto?.disponivel &&
+      calcularPrecoUnitario(produto, item.tamanho, item.borda);
+    if (!preco) {
+      removidos += 1;
+      return [];
+    }
+    if (preco === item.precoUnitario && produto.nome === item.nome) return [item];
+
+    alterados += 1;
+    return [{ ...item, nome: produto.nome, precoUnitario: preco }];
+  });
+
+  return { conferidos, removidos, alterados };
+}
+
 export function CarrinhoProvider({ children }) {
+  const { produtos, catalogoSincronizado } = useLoja();
   const [itens, setItens] = useState(() => ler("carrinho", []));
   const [aberto, setAberto] = useState(false);
   const [aviso, setAviso] = useState(null);
@@ -31,16 +63,30 @@ export function CarrinhoProvider({ children }) {
     return () => clearTimeout(t);
   }, [aviso]);
 
+  // Só confere depois que o cardápio do servidor chegou: a cópia guardada no
+  // navegador pode estar velha.
+  useEffect(() => {
+    if (!catalogoSincronizado) return;
+    const { conferidos, removidos, alterados } = conferirComCardapio(
+      itens,
+      produtos,
+    );
+    if (removidos + alterados === 0) return;
+
+    setItens(conferidos);
+    setAviso(
+      removidos > 0
+        ? "Um item saiu do cardápio e foi tirado do carrinho"
+        : "O cardápio mudou: valores do carrinho atualizados",
+    );
+  }, [itens, produtos, catalogoSincronizado]);
+
   const adicionar = useCallback(
     (produto, { tamanho, borda, quantidade, observacao }) => {
       const tam = TAMANHOS.find((t) => t.id === tamanho);
       const brd = BORDAS.find((b) => b.id === borda) ?? BORDAS[0];
-      const precoBase =
-        produto.tipo === "bebida"
-          ? produto.precos.unico
-          : produto.precos[tamanho];
-      const precoUnitario =
-        precoBase + (produto.tipo === "pizza" ? brd.preco : 0);
+      const precoUnitario = calcularPrecoUnitario(produto, tamanho, brd.id);
+      if (precoUnitario === null) return;
       const linhaId = chaveLinha(produto.id, tamanho, brd.id, observacao ?? "");
 
       setItens((atual) => {

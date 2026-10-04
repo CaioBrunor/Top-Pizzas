@@ -1,7 +1,18 @@
-import { Link, NavLink, Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import {
+  Link,
+  NavLink,
+  Navigate,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { PainelProvider, usePainel } from "../../context/PainelContext";
+import { useAoVivo } from "../../lib/tempoReal";
+import {
+  IconeCheck,
+  IconeFechar,
   IconeLista,
+  IconeMoto,
   IconePainel,
   IconePessoas,
   IconePizza,
@@ -12,22 +23,44 @@ import {
 const LINKS = [
   { para: "/admin/painel", nome: "Dashboard", Icone: IconePainel },
   { para: "/admin/pedidos", nome: "Pedidos", Icone: IconeLista },
+  { para: "/admin/entregadores", nome: "Entregadores", Icone: IconeMoto },
   { para: "/admin/produtos", nome: "Produtos", Icone: IconePizza },
   { para: "/admin/clientes", nome: "Clientes", Icone: IconePessoas },
 ];
 
 export default function AdminLayout() {
-  const { autenticado, sessao, sair } = useAuth();
+  const { autenticado } = useAuth();
 
   if (!autenticado) return <Navigate to="/admin" replace />;
 
   return (
+    <PainelProvider>
+      <Painel />
+    </PainelProvider>
+  );
+}
+
+function Painel() {
+  const { sessao, sair } = useAuth();
+  const { carregando, falha, aviso, dispensarAviso } = usePainel();
+  const aoVivo = useAoVivo();
+  const navegar = useNavigate();
+
+  return (
     <div className="admin">
       <aside className="admin__lateral">
-        <Link to="/" className="admin__marca">
-          Top<span>Pizzas</span>
-          <em>painel</em>
-        </Link>
+        <div className="admin__topo">
+          <Link to="/" className="admin__marca">
+            Top<span>Pizzas</span>
+            <em>painel</em>
+          </Link>
+          <p
+            className={`admin__vivo ${aoVivo ? "admin__vivo--ligado" : ""}`}
+            role="status"
+          >
+            {aoVivo ? "Ao vivo" : "Reconectando..."}
+          </p>
+        </div>
 
         <nav className="admin__nav" aria-label="Áreas do painel">
           {LINKS.map(({ para, nome, Icone }) => (
@@ -61,8 +94,42 @@ export default function AdminLayout() {
       </aside>
 
       <main className="admin__conteudo">
-        <Outlet />
+        {falha && (
+          <div className="nota nota--atencao" role="status">
+            <p className="nota__titulo">Os dados podem estar desatualizados</p>
+            <p>
+              {falha} O painel mostra a última cópia guardada neste navegador e
+              volta a atualizar sozinho quando a conexão retornar.
+            </p>
+          </div>
+        )}
+        {carregando ? (
+          <p className="vazio">Carregando os dados da loja...</p>
+        ) : (
+          <Outlet />
+        )}
       </main>
+
+      <div className="aviso-area" role="status" aria-live="polite">
+        {aviso && (
+          <button
+            type="button"
+            className={`aviso ${aviso.erro ? "aviso--erro" : ""}`}
+            onClick={() => {
+              dispensarAviso();
+              if (aviso.para) navegar(aviso.para);
+            }}
+          >
+            {aviso.erro ? (
+              <IconeFechar width={17} height={17} />
+            ) : (
+              <IconeCheck width={17} height={17} />
+            )}
+            <span>{aviso.texto}</span>
+            {aviso.para && <span className="aviso__acao">ver pedidos</span>}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

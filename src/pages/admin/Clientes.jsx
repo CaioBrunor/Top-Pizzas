@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { useLoja } from "../../context/LojaContext";
-import { dataHora, moeda } from "../../lib/format";
+import { usePainel } from "../../context/PainelContext";
+import { dataCurta, dataHora, moeda } from "../../lib/format";
 
 export default function Clientes() {
-  const { clientes } = useLoja();
+  const { clientes } = usePainel();
   const [busca, setBusca] = useState("");
 
   const lista = useMemo(() => {
@@ -13,6 +13,7 @@ export default function Clientes() {
       (c) =>
         c.nome.toLowerCase().includes(termo) ||
         c.telefone.includes(termo) ||
+        (c.email ?? "").toLowerCase().includes(termo) ||
         c.bairro.toLowerCase().includes(termo),
     );
   }, [clientes, busca]);
@@ -25,7 +26,7 @@ export default function Clientes() {
         <div>
           <h1>Clientes</h1>
           <p className="admin__apoio">
-            {clientes.length} pessoas já pediram. {recorrentes} voltaram mais de uma vez.
+            {clientes.length} contas cadastradas. {recorrentes} já pediram mais de uma vez.
           </p>
         </div>
         <label className="admin__busca">
@@ -33,7 +34,7 @@ export default function Clientes() {
           <input
             type="search"
             className="campo__entrada"
-            placeholder="Nome, telefone ou bairro"
+            placeholder="Nome, telefone, e-mail ou bairro"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
@@ -49,7 +50,7 @@ export default function Clientes() {
               <tr>
                 <th>Cliente</th>
                 <th>Contato</th>
-                <th>Bairro</th>
+                <th>Endereço atual</th>
                 <th>Pedidos</th>
                 <th>Último pedido</th>
                 <th className="tabela--direita">Gasto total</th>
@@ -63,7 +64,12 @@ export default function Clientes() {
                       <span className="cliente-celula__inicial" aria-hidden="true">
                         {c.nome.charAt(0)}
                       </span>
-                      <strong>{c.nome}</strong>
+                      <div>
+                        <strong>{c.nome}</strong>
+                        <span className="tabela__secundario">
+                          cliente desde {dataCurta(c.criadoEm)}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td data-rotulo="Contato">
@@ -74,7 +80,19 @@ export default function Clientes() {
                       </span>
                     </div>
                   </td>
-                  <td data-rotulo="Bairro">{c.bairro}</td>
+                  <td data-rotulo="Endereço atual">
+                    <div>
+                      {c.bairro || "ainda não informado"}
+                      {c.endereco?.rua && (
+                        <span className="tabela__secundario">
+                          {c.endereco.rua}, {c.endereco.numero}
+                          {c.endereco.complemento
+                            ? ` (${c.endereco.complemento})`
+                            : ""}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td data-rotulo="Pedidos">
                     <div className="celula-pedidos">
                       {c.pedidos}
@@ -83,7 +101,9 @@ export default function Clientes() {
                       )}
                     </div>
                   </td>
-                  <td data-rotulo="Último pedido">{dataHora(c.ultimoPedido)}</td>
+                  <td className="tabela__data" data-rotulo="Último pedido">
+                    {c.ultimoPedido ? dataHora(c.ultimoPedido) : "nenhum ainda"}
+                  </td>
                   <td className="tabela--direita" data-rotulo="Gasto total">
                     {moeda(c.gastoTotal)}
                   </td>

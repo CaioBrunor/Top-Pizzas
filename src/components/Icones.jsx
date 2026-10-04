@@ -105,6 +105,29 @@ export const IconeCadeado = (p) => (
   </svg>
 );
 
+export const IconePessoa = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+  </svg>
+);
+
+export const IconeBaixar = (p) => (
+  <svg {...base} {...p}>
+    <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />
+  </svg>
+);
+
+export const IconeSemSinal = (p) => (
+  <svg {...base} {...p}>
+    <path d="M2 2l20 20" />
+    <path d="M8.5 16.4a5 5 0 0 1 7 0" />
+    <path d="M5 12.9a10 10 0 0 1 5.2-2.7M19 12.9a10 10 0 0 0-2-1.5" />
+    <path d="M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8a15 15 0 0 0-11.3-3.8" />
+    <path d="M12 20h.01" />
+  </svg>
+);
+
 export const IconeChama = (p) => (
   <svg {...base} {...p}>
     <path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-2 1-3 1-3s1 2 2 2 0-5 2-8z" />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLoja } from "../../context/LojaContext";
+import { usePainel } from "../../context/PainelContext";
 import { CATEGORIAS } from "../../data/catalogo";
 import {
   mascaraPreco,
@@ -24,26 +25,36 @@ const VAZIO = {
   tags: [],
 };
 
-const slug = (texto) =>
-  texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
 export default function Produtos() {
+  const { produtos } = useLoja();
   const {
-    produtos,
     salvarProduto,
-    alternarDisponibilidade,
+    definirDisponibilidade,
     removerProduto,
     restaurarDados,
-  } = useLoja();
+  } = usePainel();
   const [editando, setEditando] = useState(null);
 
   const abrirNovo = () => setEditando({ ...VAZIO, novo: true });
   const abrirEdicao = (p) => setEditando({ ...p, novo: false });
+
+  // Agora as duas ações valem para a loja inteira e não têm volta, então
+  // pedem confirmação.
+  const excluir = (p) => {
+    if (window.confirm(`Excluir "${p.nome}" do cardápio? Isso não pode ser desfeito.`)) {
+      removerProduto(p.id);
+    }
+  };
+
+  const restaurar = () => {
+    if (
+      window.confirm(
+        "Restaurar os dados de exemplo? O cardápio volta ao original e todos os pedidos atuais são apagados.",
+      )
+    ) {
+      restaurarDados();
+    }
+  };
 
   return (
     <>
@@ -59,7 +70,7 @@ export default function Produtos() {
           <button
             type="button"
             className="btn btn--linha btn--pequeno"
-            onClick={restaurarDados}
+            onClick={restaurar}
           >
             Restaurar dados de exemplo
           </button>
@@ -116,7 +127,7 @@ export default function Produtos() {
                   <button
                     type="button"
                     className={`interruptor ${p.disponivel ? "interruptor--ligado" : ""}`}
-                    onClick={() => alternarDisponibilidade(p.id)}
+                    onClick={() => definirDisponibilidade(p.id, !p.disponivel)}
                     aria-pressed={p.disponivel}
                     aria-label={`${p.disponivel ? "Tirar" : "Colocar"} ${p.nome} no cardápio`}
                   >
@@ -135,7 +146,7 @@ export default function Produtos() {
                     <button
                       type="button"
                       className="btn btn--fantasma btn--pequeno tabela__perigo"
-                      onClick={() => removerProduto(p.id)}
+                      onClick={() => excluir(p)}
                     >
                       Excluir
                     </button>
@@ -150,8 +161,8 @@ export default function Produtos() {
       {editando && (
         <FormularioProduto
           produto={editando}
-          aoSalvar={(p) => {
-            salvarProduto(p);
+          aoSalvar={async (p) => {
+            await salvarProduto(p);
             setEditando(null);
           }}
           aoFechar={() => setEditando(null)}
@@ -171,18 +182,32 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
       unico: numeroParaPreco(produto.precos?.unico),
     },
   }));
+  const [erros, setErros] = useState({});
+  const [erroGeral, setErroGeral] = useState("");
+  const [salvando, setSalvando] = useState(false);
   const ehBebida = form.tipo === "bebida";
 
-  const definir = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
-  const definirPreco = (chave, valor) =>
+  const semErro = (campo) => {
+    setErros((e) => ({ ...e, [campo]: undefined }));
+    setErroGeral("");
+  };
+  const definir = (campo, valor) => {
+    setForm((f) => ({ ...f, [campo]: valor }));
+    semErro(campo);
+  };
+  const definirPreco = (chave, valor) => {
     setForm((f) => ({
       ...f,
       precos: { ...f.precos, [chave]: mascaraPreco(valor) },
     }));
+    semErro(`precos.${chave}`);
+  };
 
-  const salvar = () => {
-    if (!form.nome.trim()) return;
-    const id = form.id || slug(form.nome);
+  const salvar = async () => {
+    if (!form.nome.trim()) {
+      setErros({ nome: "Dê um nome ao produto." });
+      return;
+    }
     const precos = ehBebida
       ? { unico: precoParaNumero(form.precos.unico) }
       : {
@@ -190,8 +215,18 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
           media: precoParaNumero(form.precos.media),
           grande: precoParaNumero(form.precos.grande),
         };
-    const { novo, ...limpo } = form;
-    aoSalvar({ ...limpo, id, precos });
+    // Produto novo vai sem id: quem cria o identificador é o servidor.
+    const { novo, tipo, criadoEm, atualizadoEm, ...dados } = form;
+    if (novo) delete dados.id;
+
+    setSalvando(true);
+    try {
+      await aoSalvar({ ...dados, precos });
+    } catch (erro) {
+      setErros(erro.campos ?? {});
+      setErroGeral(erro.campos ? "Confira os campos destacados." : erro.message);
+      setSalvando(false);
+    }
   };
 
   return (
@@ -220,8 +255,11 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
               <input
                 className="campo__entrada"
                 value={form.nome}
+                maxLength={60}
+                aria-invalid={erros.nome ? "true" : undefined}
                 onChange={(e) => definir("nome", e.target.value)}
               />
+              {erros.nome && <span className="campo__erro">{erros.nome}</span>}
             </label>
 
             <label className="campo">
@@ -253,6 +291,7 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
                 inputMode="numeric"
                 placeholder="18"
                 value={form.tempoPreparo === 0 ? "" : form.tempoPreparo}
+                aria-invalid={erros.tempoPreparo ? "true" : undefined}
                 onChange={(e) =>
                   definir(
                     "tempoPreparo",
@@ -260,6 +299,9 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
                   )
                 }
               />
+              {erros.tempoPreparo && (
+                <span className="campo__erro">{erros.tempoPreparo}</span>
+              )}
             </label>
 
             <label className="campo campo--largo">
@@ -270,10 +312,15 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
                 className="campo__entrada"
                 value={form.imagem ?? ""}
                 placeholder="/assets/pizzas/nome-do-arquivo.png"
+                maxLength={300}
+                aria-invalid={erros.imagem ? "true" : undefined}
                 onChange={(e) =>
                   definir("imagem", e.target.value.trim() || null)
                 }
               />
+              {erros.imagem && (
+                <span className="campo__erro">{erros.imagem}</span>
+              )}
             </label>
 
             <label className="campo campo--largo">
@@ -282,14 +329,19 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
                 className="campo__entrada"
                 rows={3}
                 value={form.descricao}
+                maxLength={300}
                 onChange={(e) => definir("descricao", e.target.value)}
               />
+              {erros.descricao && (
+                <span className="campo__erro">{erros.descricao}</span>
+              )}
             </label>
 
             {ehBebida ? (
               <CampoPreco
                 rotulo="Preço unitário"
                 valor={form.precos.unico}
+                erro={erros["precos.unico"]}
                 aoMudar={(v) => definirPreco("unico", v)}
               />
             ) : (
@@ -298,6 +350,7 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
                   key={t}
                   rotulo={`Preço ${t === "media" ? "média" : t}`}
                   valor={form.precos[t]}
+                  erro={erros[`precos.${t}`]}
                   aoMudar={(v) => definirPreco(t, v)}
                 />
               ))
@@ -349,6 +402,12 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
             </label>
           </div>
 
+          {erroGeral && (
+            <p className="campo__erro" role="alert">
+              {erroGeral}
+            </p>
+          )}
+
           <div className="modal__acoes modal__acoes--form">
             <button
               type="button"
@@ -357,8 +416,13 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
             >
               Cancelar
             </button>
-            <button type="button" className="btn btn--ambar" onClick={salvar}>
-              Salvar produto
+            <button
+              type="button"
+              className="btn btn--ambar"
+              onClick={salvar}
+              disabled={salvando}
+            >
+              {salvando ? "Salvando..." : "Salvar produto"}
             </button>
           </div>
         </div>
@@ -367,7 +431,7 @@ function FormularioProduto({ produto, aoSalvar, aoFechar }) {
   );
 }
 
-function CampoPreco({ rotulo, valor, aoMudar }) {
+function CampoPreco({ rotulo, valor, erro, aoMudar }) {
   return (
     <label className="campo">
       <span className="campo__rotulo">{rotulo}</span>
@@ -378,9 +442,11 @@ function CampoPreco({ rotulo, valor, aoMudar }) {
           inputMode="decimal"
           placeholder="0,00"
           value={valor}
+          aria-invalid={erro ? "true" : undefined}
           onChange={(e) => aoMudar(e.target.value)}
         />
       </span>
+      {erro && <span className="campo__erro">{erro}</span>}
     </label>
   );
 }

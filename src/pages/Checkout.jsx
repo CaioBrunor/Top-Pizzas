@@ -1,32 +1,36 @@
 import { useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { erroDeNome } from "../../shared/validacao.js";
+import Campo from "../components/Campo";
+import { useAuth } from "../context/AuthContext";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { useLoja } from "../context/LojaContext";
+import { BAIRROS } from "../data/catalogo";
 import {
   mascaraCartao,
   mascaraCep,
   mascaraTelefone,
   mascaraValidade,
   moeda,
+  precoParaNumero,
   soDigitos,
 } from "../lib/format";
+import { useOnline } from "../lib/tempoReal";
 import { IconeCheck, IconeSeta, IconeVoltar } from "../components/Icones";
 
 const ETAPAS = ["Entrega", "Pagamento", "Revisão"];
 
-const BAIRROS = [
-  "Catolé",
-  "Bodocongó",
-  "Centro",
-  "Liberdade",
-  "Prata",
-  "Universitário",
-  "José Pinheiro",
-  "Santa Rosa",
-  "Malvinas",
-  "Alto Branco",
-  "Mirante",
-];
+// Onde fica, no formulário, cada campo que o servidor pode recusar.
+const CAMPOS_DO_SERVIDOR = {
+  "contato.nome": { campo: "nome", etapa: 0 },
+  "contato.telefone": { campo: "telefone", etapa: 0 },
+  "entrega.cep": { campo: "cep", etapa: 0 },
+  "entrega.rua": { campo: "rua", etapa: 0 },
+  "entrega.numero": { campo: "numero", etapa: 0 },
+  "entrega.bairro": { campo: "bairro", etapa: 0 },
+  "entrega.complemento": { campo: "complemento", etapa: 0 },
+  "pagamento.troco": { campo: "troco", etapa: 1 },
+};
 
 export default function Checkout() {
   const {
@@ -39,42 +43,45 @@ export default function Checkout() {
     setModoEntrega,
     esvaziar,
   } = useCarrinho();
-  const { criarPedido } = useLoja();
+  const { criarPedido, recarregarCatalogo } = useLoja();
+  const { cliente } = useAuth();
+  const online = useOnline();
   const navegar = useNavigate();
 
   const [etapa, setEtapa] = useState(0);
   const [erros, setErros] = useState({});
+  const [erroEnvio, setErroEnvio] = useState("");
   const [processando, setProcessando] = useState(false);
 
-  const [dados, setDados] = useState({
-    nome: "",
-    telefone: "",
-    email: "",
-    cep: "",
-    rua: "",
-    numero: "",
-    bairro: "Catole",
-    complemento: "",
+  // Começa com os dados atuais da conta: o endereço do último pedido.
+  const [dados, setDados] = useState(() => ({
+    nome: cliente.nome,
+    telefone: cliente.telefone,
+    cep: cliente.endereco?.cep ?? "",
+    rua: cliente.endereco?.rua ?? "",
+    numero: cliente.endereco?.numero ?? "",
+    bairro: cliente.endereco?.bairro || BAIRROS[0],
+    complemento: cliente.endereco?.complemento ?? "",
     metodo: "pix",
     cartaoNumero: "",
     cartaoNome: "",
     cartaoValidade: "",
     cartaoCvv: "",
     troco: "",
-  });
+  }));
 
   const definir = (campo, valor) => {
     setDados((d) => ({ ...d, [campo]: valor }));
     setErros((e) => ({ ...e, [campo]: undefined }));
+    setErroEnvio("");
   };
 
   const validarEntrega = () => {
     const e = {};
-    if (dados.nome.trim().length < 3) e.nome = "Escreva seu nome completo.";
+    const nome = erroDeNome(dados.nome);
+    if (nome) e.nome = nome;
     if (soDigitos(dados.telefone).length < 10)
       e.telefone = "Telefone incompleto.";
-    if (dados.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email))
-      e.email = "Confira o e-mail.";
     if (modoEntrega === "entrega") {
       if (soDigitos(dados.cep).length !== 8) e.cep = "O CEP tem 8 dígitos.";
       if (dados.rua.trim().length < 3) e.rua = "Informe a rua.";
@@ -118,32 +125,63 @@ export default function Checkout() {
 
   const finalizar = async () => {
     setProcessando(true);
-    await new Promise((r) => setTimeout(r, 1700));
+    setErroEnvio("");
 
-    const pedido = criarPedido({
-      cliente: {
-        nome: dados.nome.trim(),
-        telefone: dados.telefone,
-        email: dados.email.trim(),
-      },
-      entrega: {
-        tipo: modoEntrega,
-        cep: dados.cep,
-        rua: dados.rua.trim(),
-        numero: dados.numero.trim(),
-        bairro: dados.bairro,
-        complemento: dados.complemento.trim(),
-        cidade: "Campina Grande",
-      },
-      pagamento: { metodo: dados.metodo, troco: dados.troco },
-      itens: itens.map(({ tipo, imagem, ...resto }) => resto),
-      subtotal,
-      taxaEntrega,
-      total,
-    });
+    try {
+      // Vão só as escolhas do cliente. O nome e o preço de cada item são
+      // montados pelo servidor a partir do cardápio dele.
+      const pedido = await criarPedido({
+        contato: { nome: dados.nome, telefone: dados.telefone },
+        itens: itens.map(
+          ({ produtoId, tamanho, borda, quantidade, observacao }) => ({
+            produtoId,
+            tamanho,
+            borda,
+            quantidade,
+            observacao,
+          }),
+        ),
+        entrega:
+          modoEntrega === "retirada"
+            ? { tipo: "retirada" }
+            : {
+                tipo: "entrega",
+                cep: dados.cep,
+                rua: dados.rua,
+                numero: dados.numero,
+                bairro: dados.bairro,
+                complemento: dados.complemento,
+              },
+        pagamento: {
+          metodo: dados.metodo,
+          troco:
+            dados.metodo === "dinheiro" && dados.troco
+              ? precoParaNumero(dados.troco)
+              : null,
+        },
+        totalEsperado: total,
+      });
 
-    esvaziar();
-    navegar(`/pedido/${pedido.id}`, { replace: true });
+      esvaziar();
+      navegar(`/pedido/${pedido.id}`, { replace: true });
+    } catch (erro) {
+      setProcessando(false);
+
+      const recusados = Object.entries(erro.campos ?? {})
+        .map(([chave, mensagem]) => ({ ...CAMPOS_DO_SERVIDOR[chave], mensagem }))
+        .filter((r) => r.campo);
+      if (recusados.length > 0) {
+        setErros(
+          Object.fromEntries(recusados.map((r) => [r.campo, r.mensagem])),
+        );
+        setEtapa(Math.min(...recusados.map((r) => r.etapa)));
+        return;
+      }
+
+      setErroEnvio(erro.message);
+      // O carrinho se ajusta sozinho quando o cardápio novo chega.
+      if (erro.codigo === "CARDAPIO_ALTERADO") recarregarCatalogo();
+    }
   };
 
   const resumo = useMemo(
@@ -257,13 +295,10 @@ export default function Checkout() {
                       autoComplete="tel"
                     />
                     <Campo
-                      rotulo="E-mail (opcional)"
-                      valor={dados.email}
-                      erro={erros.email}
-                      aoMudar={(v) => definir("email", v)}
-                      placeholder="voce@email.com"
-                      type="email"
-                      autoComplete="email"
+                      rotulo="E-mail da conta"
+                      valor={cliente.email}
+                      aoMudar={() => {}}
+                      readOnly
                       largo
                     />
                   </div>
@@ -294,6 +329,9 @@ export default function Checkout() {
                             </option>
                           ))}
                         </select>
+                        {erros.bairro && (
+                          <span className="campo__erro">{erros.bairro}</span>
+                        )}
                       </label>
                       <Campo
                         rotulo="Rua"
@@ -301,6 +339,7 @@ export default function Checkout() {
                         erro={erros.rua}
                         aoMudar={(v) => definir("rua", v)}
                         placeholder="Rua 1 "
+                        maxLength={120}
                         largo
                       />
                       <Campo
@@ -310,12 +349,15 @@ export default function Checkout() {
                         aoMudar={(v) => definir("numero", v)}
                         placeholder="412"
                         inputMode="numeric"
+                        maxLength={10}
                       />
                       <Campo
                         rotulo="Complemento (opcional)"
                         valor={dados.complemento}
+                        erro={erros.complemento}
                         aoMudar={(v) => definir("complemento", v)}
                         placeholder="Apto 302, portão verde"
+                        maxLength={80}
                       />
                     </div>
                   </fieldset>
@@ -494,14 +536,31 @@ export default function Checkout() {
                   </dl>
                 </div>
 
+                {!online && (
+                  <div className="nota nota--atencao" role="status">
+                    <p className="nota__titulo">Você está sem internet</p>
+                    <p>
+                      O carrinho e estes dados ficam guardados. Confirme o
+                      pedido quando a conexão voltar.
+                    </p>
+                  </div>
+                )}
+
+                {erroEnvio && (
+                  <div className="nota nota--atencao" role="alert">
+                    <p className="nota__titulo">O pedido não foi enviado</p>
+                    <p>{erroEnvio}</p>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   className="btn btn--ambar btn--bloco"
                   onClick={finalizar}
-                  disabled={processando}
+                  disabled={processando || !online}
                 >
                   {processando
-                    ? "Confirmando pagamento..."
+                    ? "Enviando pedido..."
                     : `Confirmar pedido ${moeda(total)}`}
                 </button>
               </div>
@@ -541,22 +600,6 @@ export default function Checkout() {
         </div>
       </div>
     </section>
-  );
-}
-
-function Campo({ rotulo, valor, erro, aoMudar, largo = false, ...resto }) {
-  return (
-    <label className={`campo ${largo ? "campo--largo" : ""}`}>
-      <span className="campo__rotulo">{rotulo}</span>
-      <input
-        className="campo__entrada"
-        value={valor}
-        aria-invalid={erro ? "true" : undefined}
-        onChange={(e) => aoMudar(e.target.value)}
-        {...resto}
-      />
-      {erro && <span className="campo__erro">{erro}</span>}
-    </label>
   );
 }
 

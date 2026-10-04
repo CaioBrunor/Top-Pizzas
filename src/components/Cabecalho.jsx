@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useCarrinho } from "../context/CarrinhoContext";
-import { IconeSacola, IconeCadeado, MarcaFatia } from "./Icones";
+import { primeiroNome } from "../lib/format";
+import { IconeSacola, IconeCadeado, IconePessoa, MarcaFatia } from "./Icones";
 
 function LinkAncora({ para, children }) {
   const navegar = useNavigate();
@@ -30,6 +32,7 @@ function LinkAncora({ para, children }) {
 
 export default function Cabecalho() {
   const { quantidadeTotal, abrir } = useCarrinho();
+  const { cliente } = useAuth();
   const [colado, setColado] = useState(false);
   const [progresso, setProgresso] = useState(0);
   const { pathname } = useLocation();
@@ -79,6 +82,17 @@ export default function Cabecalho() {
           >
             <IconeCadeado width={16} height={16} />
             Entrar como admin
+          </Link>
+
+          <Link
+            to={cliente ? "/conta" : "/entrar"}
+            className="cabecalho__conta"
+            aria-label={cliente ? "Minha conta" : "Entrar ou criar conta"}
+          >
+            <IconePessoa width={17} height={17} />
+            <span className="cabecalho__conta-texto">
+              {cliente ? primeiroNome(cliente.nome) : "Entrar"}
+            </span>
           </Link>
 
           <button type="button" className="carrinho-botao" onClick={abrir}>

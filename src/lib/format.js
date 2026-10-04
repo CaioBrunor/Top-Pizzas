@@ -1,29 +1,16 @@
-export const STATUS_PEDIDO = [
-  { id: "recebido", nome: "Recebido", cor: "selo--ambar" },
-  { id: "preparo", nome: "Em preparo", cor: "selo--ambar" },
-  { id: "forno", nome: "No forno", cor: "selo--quente" },
-  { id: "entrega", nome: "Saiu para entrega", cor: "selo--quente" },
-  { id: "entregue", nome: "Entregue", cor: "selo--basil" },
-  { id: "cancelado", nome: "Cancelado", cor: "selo--danger" },
-];
+import { VERSAO_CATALOGO } from "../data/catalogo";
 
-export const FLUXO_STATUS = [
-  "recebido",
-  "preparo",
-  "forno",
-  "entrega",
-  "entregue",
-];
-
-export function statusInfo(id) {
-  return STATUS_PEDIDO.find((s) => s.id === id) ?? STATUS_PEDIDO[0];
-}
-
-export function proximoStatus(id) {
-  const i = FLUXO_STATUS.indexOf(id);
-  if (i === -1 || i === FLUXO_STATUS.length - 1) return null;
-  return FLUXO_STATUS[i + 1];
-}
+// As etapas do pedido são as mesmas no site e no servidor.
+export {
+  DIGITOS_DO_CODIGO,
+  FLUXO_STATUS,
+  STATUS_PEDIDO,
+  ehEntrega,
+  etapaDoPedido,
+  pedidoEmAberto,
+  proximoStatus,
+  statusInfo,
+} from "../../shared/pedidos.js";
 
 export const moeda = (valor) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
@@ -42,6 +29,23 @@ export const dataCurta = (iso) =>
   new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(
     new Date(iso),
   );
+
+export const hora = (iso) =>
+  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(
+    new Date(iso),
+  );
+
+// "agora", "há 40 s", "há 3 min": usado para dizer de quando é a posição.
+export function haQuantoTempo(iso, agora = Date.now()) {
+  const segundos = Math.max(0, Math.round((agora - new Date(iso).getTime()) / 1000));
+  if (segundos < 10) return "agora";
+  if (segundos < 60) return `há ${segundos} s`;
+  return `há ${Math.round(segundos / 60)} min`;
+}
+
+export const primeiroNome = (nome) => String(nome ?? "").trim().split(/\s+/)[0];
+
+export const urlDaFoto = (imagem) => `${imagem}?v=${VERSAO_CATALOGO}`;
 
 export const mascaraTelefone = (valor) => {
   const d = valor.replace(/\D/g, "").slice(0, 11);
@@ -72,26 +76,6 @@ export const mascaraValidade = (valor) => {
 };
 
 export const soDigitos = (valor) => valor.replace(/\D/g, "");
-
-export function gerarCodigoPedido() {
-  const n = Math.floor(1000 + Math.random() * 9000);
-  return `TP-${n}`;
-}
-
-export function semente(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return () => {
-    h += 0x6d2b79f5;
-    let t = h;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 export const mascaraPreco = (valor) => {
   let v = String(valor)

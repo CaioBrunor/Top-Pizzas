@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLoja } from "../../context/LojaContext";
-import { dataCurta, dataHora, moeda, statusInfo } from "../../lib/format";
+import { usePainel } from "../../context/PainelContext";
+import { dataCurta, dataHora, etapaDoPedido, moeda } from "../../lib/format";
 
 const DIAS = 7;
 
 export default function Dashboard() {
-  const { pedidos, produtos } = useLoja();
+  const { produtos } = useLoja();
+  const { pedidos, clientes } = usePainel();
 
   const dados = useMemo(() => {
     const validos = pedidos.filter((p) => p.status !== "cancelado");
@@ -39,19 +41,23 @@ export default function Dashboard() {
     }
 
     const contagem = new Map();
+    // Produto excluído do cardápio continua no ranking com o nome que tinha
+    // quando foi vendido.
+    const nomesVendidos = new Map();
     validos.forEach((p) =>
       p.itens.forEach((i) => {
         contagem.set(
           i.produtoId,
           (contagem.get(i.produtoId) ?? 0) + i.quantidade,
         );
+        nomesVendidos.set(i.produtoId, i.nome);
       }),
     );
     const ranking = [...contagem.entries()]
       .map(([id, qtd]) => ({
         id,
         qtd,
-        nome: produtos.find((p) => p.id === id)?.nome ?? id,
+        nome: produtos.find((p) => p.id === id)?.nome ?? nomesVendidos.get(id),
       }))
       .sort((a, b) => b.qtd - a.qtd)
       .slice(0, 5);
@@ -69,6 +75,9 @@ export default function Dashboard() {
 
   const maximo = Math.max(...dados.serie.map((d) => d.valor), 1);
   const recentes = pedidos.slice(0, 6);
+  const clientesRecentes = [...clientes]
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+    .slice(0, 5);
 
   return (
     <>
@@ -99,7 +108,7 @@ export default function Dashboard() {
         <Kpi
           rotulo="Faturamento acumulado"
           valor={moeda(dados.faturamentoTotal)}
-          apoio="últimos 9 dias"
+          apoio="desde o primeiro pedido"
         />
       </div>
 
@@ -167,12 +176,59 @@ export default function Dashboard() {
                   <td data-rotulo="Cliente">{p.cliente.nome}</td>
                   <td data-rotulo="Quando">{dataHora(p.criadoEm)}</td>
                   <td data-rotulo="Status">
-                    <span className={`selo ${statusInfo(p.status).cor}`}>
-                      {statusInfo(p.status).nome}
+                    <span className={`selo ${etapaDoPedido(p).cor}`}>
+                      {etapaDoPedido(p).nome}
                     </span>
                   </td>
                   <td className="tabela--direita" data-rotulo="Total">
                     {moeda(p.total)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="painel">
+        <div className="painel__cabecalho">
+          <h2 className="painel__titulo">Clientes recentes</h2>
+          <Link to="/admin/clientes" className="painel__atalho">
+            Ver os {clientes.length}
+          </Link>
+        </div>
+
+        <div className="tabela-area">
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Contato</th>
+                <th>Endereço atual</th>
+                <th>Cadastro</th>
+                <th className="tabela--direita">Pedidos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientesRecentes.map((c) => (
+                <tr key={c.id}>
+                  <td data-rotulo="Cliente">{c.nome}</td>
+                  <td data-rotulo="Contato">
+                    <div>
+                      {c.telefone}
+                      <span className="tabela__secundario">{c.email}</span>
+                    </div>
+                  </td>
+                  <td data-rotulo="Endereço atual">
+                    {c.endereco?.rua
+                      ? `${c.endereco.rua}, ${c.endereco.numero} — ${c.bairro}`
+                      : c.bairro || "ainda não informado"}
+                  </td>
+                  <td className="tabela__data" data-rotulo="Cadastro">
+                    {dataHora(c.criadoEm)}
+                  </td>
+                  <td className="tabela--direita" data-rotulo="Pedidos">
+                    {c.pedidos}
                   </td>
                 </tr>
               ))}
