@@ -1,0 +1,73 @@
+:root {
+  --carvao: #0d0d0f;
+  --carvao-fundo: #0b0b0d;
+  --grafite: #16161a;
+  --grafite-alto: #26262b;
+
+  /* Texto  */
+  --linho: #f4f1ec; /* texto principal                            */
+  --linho-62: rgb(244 241 236 / 0.62);
+  --linho-45: rgb(244 241 236 / 0.45);
+  --linho-14: rgb(244 241 236 / 0.14);
+  --linho-08: rgb(244 241 236 / 0.08);
+
+  /*  Acento */
+  --ambar: #f0a24a;
+  --ambar-claro: #ffc07a;
+  --sobre-ambar: #141014;
+
+  /* Materiais do modelo 3D */
+  --massa: #d59a4d;
+  --crosta: #c57f33;
+  --queijo: #f1cf80;
+  --mussarela: #f7e4b6;
+  --molho: #a8301b;
+  --tomate: #c0261a;
+  --polpa: #dc6b4c;
+  --manjericao: #2b5f28;
+  --carbonizado: #53301a;
+  --manjericao-uv: #7fae5c;
+
+  /*Cores semanticas */
+  --bg: var(--carvao);
+  --surface: var(--grafite);
+  --surface-raised: var(--grafite-alto);
+  --line: var(--linho-14);
+  --line-soft: var(--linho-08);
+  --text: var(--linho);
+  --text-strong: var(--linho);
+  --text-muted: var(--linho-62);
+  --text-faint: var(--linho-45);
+  --accent: var(--ambar);
+  --accent-hover: var(--ambar-claro);
+  --on-accent: var(--sobre-ambar);
+  --danger: var(--tomate);
+  --quente: var(--polpa);
+  --success: var(--manjericao-uv);
+  --warning: var(--ambar);
+
+  --brilho-rgb: 240 162 74;
+
+  /* Tipografia  */
+  --font-display: "Anton", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, sans-serif;
+
+  --step--1: clamp(0.79rem, 0.77rem + 0.1vw, 0.85rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.06rem);
+  --step-1: clamp(1.24rem, 1.16rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.55rem, 1.4rem + 0.75vw, 2.05rem);
+  --step-3: clamp(1.95rem, 1.68rem + 1.3vw, 2.85rem);
+  --step-4: clamp(2.6rem, 2rem + 3vw, 4.6rem);
+  --rotulo-espaco: 0.3em;
+
+  /* Espaço e forma  */
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  --max-width: 1240px;
+  --radius-sm: 6px;
+  --radius-md: 14px;
+  --radius-lg: 26px;
+  --radius-pill: 999px;
+
+  --shadow-forno: 0 40px 60px rgb(0 0 0 / 0.55);
+  --ease-forno: cubic-bezier(0.22, 1, 0.36, 1);
+}
