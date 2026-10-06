@@ -2,13 +2,13 @@ import { usuarioDoToken } from "../services/token.js";
 import { ErroHttp } from "./erros.js";
 
 /** Exige o cabeçalho "Authorization: Bearer <token>" e preenche req.usuario. */
-export function autenticar(req, res, next) {
+export async function autenticar(req, res, next) {
   const [tipo, token] = (req.get("authorization") ?? "").split(" ");
   if (tipo !== "Bearer" || !token) {
     throw new ErroHttp(401, "Entre na sua conta para continuar.");
   }
 
-  const sessao = usuarioDoToken(token);
+  const sessao = await usuarioDoToken(token);
   if (!sessao) {
     throw new ErroHttp(401, "Sua sessão terminou. Entre novamente.", {
       codigo: "SESSAO_EXPIRADA",

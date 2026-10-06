@@ -15,29 +15,23 @@ const inicioDeHoje = () => {
   return hoje.toISOString();
 };
 
-export function listar(req, res) {
-  const desde = inicioDeHoje();
-  const concluidas = Pedido.listar()
-    .filter(
-      (p) =>
-        p.status === "entregue" &&
-        p.entregador?.id === req.usuario.id &&
-        p.confirmacao?.em >= desde,
-    )
-    .map((p) => ({
-      id: p.id,
-      bairro: p.entrega.bairro,
-      em: p.confirmacao.em,
-    }));
+export async function listar(req, res) {
+  const [feitasHoje, naRua] = await Promise.all([
+    Pedido.listarConcluidasDesde(req.usuario.id, inicioDeHoje()),
+    Pedido.listarEmEntregaCom(req.usuario.id),
+  ]);
 
-  res.json({
-    entregas: Pedido.listarEmEntregaCom(req.usuario.id).map(pedidoParaEntregador),
-    concluidas,
-  });
+  const concluidas = feitasHoje.map((p) => ({
+    id: p.id,
+    bairro: p.entrega.bairro,
+    em: p.confirmacao.em,
+  }));
+
+  res.json({ entregas: naRua.map(pedidoParaEntregador), concluidas });
 }
 
-export function registrarLocalizacao(req, res) {
-  const naRua = Pedido.listarEmEntregaCom(req.usuario.id);
+export async function registrarLocalizacao(req, res) {
+  const naRua = await Pedido.listarEmEntregaCom(req.usuario.id);
 
   // Sem pedido na rua, o servidor não guarda nem repassa onde ele está.
   if (naRua.length === 0) {
@@ -53,7 +47,7 @@ export function registrarLocalizacao(req, res) {
 }
 
 export async function confirmar(req, res) {
-  const pedido = Pedido.buscarPorId(req.params.id);
+  const pedido = await Pedido.buscarPorId(req.params.id);
   const comigo =
     pedido?.status === "entrega" && pedido.entregador?.id === req.usuario.id;
 
@@ -68,7 +62,7 @@ export async function confirmar(req, res) {
     confirmacao: { tipo: "codigo", em: new Date().toISOString() },
   });
   avisarPedido("atualizado", entregue);
-  pararDeRastrearSeLivre(req.usuario.id);
+  await pararDeRastrearSeLivre(req.usuario.id);
   res.json({
     concluida: {
       id: entregue.id,

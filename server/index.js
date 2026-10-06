@@ -1,10 +1,11 @@
 import { createServer } from "node:http";
 import { criarApp } from "./app.js";
+import { conectarBanco, desconectarBanco } from "./config/db.js";
 import { config } from "./config/env.js";
 import { prepararDados } from "./services/dadosIniciais.js";
 import { iniciarTempoReal } from "./services/tempoReal.js";
-import { localStorage } from "./storage/index.js";
 
+await conectarBanco();
 await prepararDados();
 
 const { app, comSite } = criarApp();
@@ -31,11 +32,11 @@ servidor.listen(config.porta, () => {
   );
 });
 
-// Ao encerrar, espera as gravações pendentes chegarem ao disco.
+// Ao encerrar, fecha a conexão com o banco.
 for (const sinal of ["SIGINT", "SIGTERM"]) {
   process.on(sinal, async () => {
     servidor.close();
-    await localStorage.descarregar().catch(() => {});
+    await desconectarBanco().catch(() => {});
     process.exit(0);
   });
 }

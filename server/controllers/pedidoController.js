@@ -20,8 +20,8 @@ import {
 const pedidoNaoEncontrado = () => new ErroHttp(404, "Pedido não encontrado.");
 
 // Só entregador ativo pode receber um pedido.
-function entregadorDisponivel(id) {
-  const entregador = id ? Usuario.buscarEntregador(id) : null;
+async function entregadorDisponivel(id) {
+  const entregador = id ? await Usuario.buscarEntregador(id) : null;
   if (!entregador?.ativo) {
     throw new ErroHttp(422, "Confira os campos destacados.", {
       campos: {
@@ -36,7 +36,7 @@ function entregadorDisponivel(id) {
 
 export async function criar(req, res) {
   const { contato, totalEsperado, ...carrinho } = req.dados;
-  const montado = montarPedido(carrinho, Produto.listar());
+  const montado = montarPedido(carrinho, await Produto.listar());
 
   if (
     totalEsperado !== undefined &&
@@ -78,18 +78,18 @@ export async function criar(req, res) {
   res.status(201).json({ pedido: pedidoParaCliente(pedido), usuario });
 }
 
-export function listar(req, res) {
-  res.json({ pedidos: Pedido.listar().map(pedidoParaPainel) });
+export async function listar(req, res) {
+  const pedidos = await Pedido.listar();
+  res.json({ pedidos: pedidos.map(pedidoParaPainel) });
 }
 
-export function listarMeus(req, res) {
-  res.json({
-    pedidos: Pedido.listarDoCliente(req.usuario.id).map(pedidoParaCliente),
-  });
+export async function listarMeus(req, res) {
+  const pedidos = await Pedido.listarDoCliente(req.usuario.id);
+  res.json({ pedidos: pedidos.map(pedidoParaCliente) });
 }
 
-export function detalhar(req, res) {
-  const pedido = Pedido.buscarPorId(req.params.id);
+export async function detalhar(req, res) {
+  const pedido = await Pedido.buscarPorId(req.params.id);
   const ehAdmin = req.usuario.papel === "admin";
   const ehDono = pedido?.clienteId === req.usuario.id;
 
@@ -103,7 +103,7 @@ export function detalhar(req, res) {
 
 export async function atualizarStatus(req, res) {
   const { status, entregadorId } = req.dados;
-  const atual = Pedido.buscarPorId(req.params.id);
+  const atual = await Pedido.buscarPorId(req.params.id);
   if (!atual) throw pedidoNaoEncontrado();
 
   if (atual.status === status) {
@@ -122,7 +122,7 @@ export async function atualizarStatus(req, res) {
   if (ehEntrega(atual)) {
     if (status === "entrega") {
       alteracoes.entregador = resumoDoEntregador(
-        entregadorDisponivel(entregadorId),
+        await entregadorDisponivel(entregadorId),
       );
       // Pedido feito antes de existir o código ganha o seu ao sair.
       alteracoes.codigoEntrega = atual.codigoEntrega ?? gerarCodigo();
@@ -144,13 +144,13 @@ export async function atualizarStatus(req, res) {
   avisarPedido("atualizado", pedido, {
     entregadorAnterior: atual.entregador?.id,
   });
-  pararDeRastrearSeLivre(atual.entregador?.id);
+  await pararDeRastrearSeLivre(atual.entregador?.id);
   res.json({ pedido: pedidoParaPainel(pedido) });
 }
 
 /** Troca quem está levando um pedido que já saiu. */
 export async function definirEntregador(req, res) {
-  const atual = Pedido.buscarPorId(req.params.id);
+  const atual = await Pedido.buscarPorId(req.params.id);
   if (!atual) throw pedidoNaoEncontrado();
   if (!ehEntrega(atual) || atual.status !== "entrega") {
     throw new ErroHttp(
@@ -160,7 +160,7 @@ export async function definirEntregador(req, res) {
     );
   }
 
-  const entregador = entregadorDisponivel(req.dados.entregadorId);
+  const entregador = await entregadorDisponivel(req.dados.entregadorId);
   const pedido = await Pedido.atualizar(atual.id, {
     entregador: resumoDoEntregador(entregador),
     codigoEntrega: atual.codigoEntrega ?? gerarCodigo(),
@@ -169,6 +169,6 @@ export async function definirEntregador(req, res) {
   avisarPedido("atualizado", pedido, {
     entregadorAnterior: atual.entregador?.id,
   });
-  pararDeRastrearSeLivre(atual.entregador?.id);
+  await pararDeRastrearSeLivre(atual.entregador?.id);
   res.json({ pedido: pedidoParaPainel(pedido) });
 }

@@ -5,12 +5,12 @@ import { avisarTodos } from "../services/tempoReal.js";
 const produtoNaoEncontrado = () =>
   new ErroHttp(404, "Este produto não existe mais no cardápio.");
 
-export function listar(req, res) {
-  res.json({ produtos: Produto.listar() });
+export async function listar(req, res) {
+  res.json({ produtos: await Produto.listar() });
 }
 
-export function detalhar(req, res) {
-  const produto = Produto.buscarPorId(req.params.id);
+export async function detalhar(req, res) {
+  const produto = await Produto.buscarPorId(req.params.id);
   if (!produto) throw produtoNaoEncontrado();
   res.json({ produto });
 }

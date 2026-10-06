@@ -6,15 +6,23 @@ Site de pedidos de uma pizzaria: cardápio, carrinho, checkout com conta de clie
 - **API:** Node.js + Express (rotas, controllers e models)
 - **Tempo real:** Socket.IO
 - **Mapa:** Leaflet + OpenStreetMap
-- **Dados:** arquivos JSON no servidor, com a mesma interface do `localStorage`
+- **Banco de dados:** MongoDB, com Mongoose
 
 ## Como rodar
 
-Precisa do Node.js 20.12 ou mais novo.
+Precisa do Node.js 20.12 ou mais novo e de um MongoDB.
+
+**1. MongoDB.** Escolha um:
+
+- **Docker (mais simples):** `docker compose up -d` sobe um MongoDB em `localhost:27017`, com os dados guardados em um volume.
+- **Instalado na máquina:** instale o [MongoDB Community](https://www.mongodb.com/try/download/community) e deixe o serviço rodando.
+- **Na nuvem:** crie um cluster gratuito no [MongoDB Atlas](https://www.mongodb.com/atlas), libere o seu IP e copie a string de conexão para `MONGODB_URI`.
+
+**2. O projeto:**
 
 ```bash
 npm install
-cp .env.example .env   # e ajuste a senha do painel
+cp .env.example .env   # ajuste a senha do painel e, se precisar, MONGODB_URI
 npm run dev
 ```
 
@@ -31,7 +39,7 @@ O painel fica em `/admin`. O usuário e a senha são os de `ADMIN_USUARIO` e `AD
 
 A área do entregador fica em `/entregador`. Cada entregador entra com o telefone e a senha cadastrados em **Painel > Entregadores**.
 
-Na primeira vez, o servidor grava o cardápio inicial e alguns clientes, entregadores e pedidos de exemplo, para o painel não abrir vazio. As contas de exemplo não têm senha.
+Na primeira vez, o servidor grava no banco o cardápio inicial e alguns clientes, entregadores e pedidos de exemplo, para o painel não abrir vazio. As contas de exemplo não têm senha. Nas vezes seguintes ele só reaproveita o que já está no banco.
 
 ### Versão de produção (e teste do PWA)
 
@@ -53,13 +61,13 @@ server/
   config/env.js       lê o .env
   routes/             endpoints da API
   controllers/        o que cada endpoint faz
-  models/             Usuario, Produto, Pedido (leitura e gravação)
+  config/db.js        conexão com o MongoDB
+  models/             Usuario, Produto, Pedido (schemas Mongoose e consultas)
   middlewares/        segurança, autenticação, validação, erros, log
   validators/         regras de cada corpo de requisição (zod)
   services/           senha, token, tempo real, cálculo do pedido, código de
                       entrega, posição dos entregadores, dados iniciais
-  storage/            LocalStorage do servidor (arquivos JSON)
-  data/               os dados gravados (fora do Git)
+  data/               só o segredo do JWT gerado automaticamente (fora do Git)
 shared/               regras usadas pelo site e pelo servidor (preços, status, validação)
 src/                  o site
   context/            AuthContext, LojaContext, PainelContext, CarrinhoContext,
@@ -151,7 +159,16 @@ Na retirada não há entregador nem código: as etapas finais aparecem como "Pro
 
 ## Onde ficam os dados
 
-**No servidor**, em `server/data/`, um arquivo por chave: `usuarios.json`, `produtos.json`, `pedidos.json`. Quem lê e grava é `server/storage/LocalStorage.js`, com `getItem` e `setItem` como no navegador. Para trocar por um banco de dados no futuro, só os arquivos de `server/models/` mudam.
+**No servidor**, em um banco MongoDB (por padrão `top-pizzas`), com quatro coleções:
+
+| Coleção | Model | Conteúdo |
+| --- | --- | --- |
+| `usuarios` | `models/Usuario.js` | clientes, entregadores e a conta do painel, separados pelo campo `papel`. O e-mail é único, e o telefone é único entre entregadores |
+| `produtos` | `models/Produto.js` | o cardápio. O `_id` é o texto do produto (`margherita`) e `ordem` guarda a posição |
+| `pedidos` | `models/Pedido.js` | um documento por pedido, com itens, entrega, pagamento, entregador e histórico dentro dele. O `_id` é o código (`TP-1000`) |
+| `meta` | `models/Meta.js` | o contador dos códigos de pedido e a marca de que os dados iniciais já foram gravados |
+
+O resto do servidor não enxerga o MongoDB: os models devolvem objetos simples com `id` (e não `_id`), então as rotas e o site continuam recebendo o mesmo formato de antes. Os códigos de pedido vêm de um contador atômico, então pedidos simultâneos nunca repetem o mesmo código.
 
 **No navegador**, no `localStorage` (prefixo `top-pizzas:`):
 
@@ -192,7 +209,8 @@ Antes de publicar: troque `ADMIN_SENHA`, defina `JWT_SECRET`, use HTTPS (`FORCAR
 
 ## Limites conhecidos
 
-- Os dados em arquivo JSON servem para uma loja pequena e um servidor só. Hospedagens que apagam o disco a cada publicação perdem os dados: use um disco persistente ou troque os models por um banco.
+- A posição dos entregadores e as tentativas erradas de código de entrega ficam só na memória do servidor, não no banco. Com mais de uma instância da API rodando ao mesmo tempo, cada uma teria a sua cópia (e o Socket.IO precisaria de um adaptador compartilhado).
+- Faça backup do banco (`mongodump`, ou os backups do Atlas). O botão "Restaurar dados de exemplo" do painel apaga o cardápio e todos os pedidos.
 - O pagamento continua simulado. Nenhum dado de cartão é enviado ao servidor.
 - Não há recuperação de senha por e-mail.
 - O mapa usa os blocos públicos do OpenStreetMap, que servem para pouco movimento. Com muito acesso, contrate um serviço de mapas e troque o endereço em `src/components/MapaLeaflet.jsx`.

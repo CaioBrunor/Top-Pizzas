@@ -7,9 +7,9 @@ import { avisarAdmins } from "./tempoReal.js";
  * entrega dele termina (ou troca de mãos), a posição é esquecida e o painel
  * é avisado.
  */
-export function pararDeRastrearSeLivre(entregadorId) {
+export async function pararDeRastrearSeLivre(entregadorId) {
   if (!entregadorId) return;
-  if (Pedido.listarEmEntregaCom(entregadorId).length > 0) return;
+  if ((await Pedido.listarEmEntregaCom(entregadorId)).length > 0) return;
 
   esquecerPosicao(entregadorId);
   avisarAdmins("entregador:posicao", { entregadorId, posicao: null });

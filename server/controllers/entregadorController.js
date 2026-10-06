@@ -32,10 +32,9 @@ async function gravar(acao) {
   }
 }
 
-export function listar(req, res) {
-  res.json({
-    entregadores: Usuario.listarEntregadores().map(entregadorParaPainel),
-  });
+export async function listar(req, res) {
+  const entregadores = await Usuario.listarEntregadores();
+  res.json({ entregadores: entregadores.map(entregadorParaPainel) });
 }
 
 export async function criar(req, res) {
@@ -55,7 +54,7 @@ export async function criar(req, res) {
 
 export async function atualizar(req, res) {
   const { senha, ...dados } = req.dados;
-  if (!Usuario.buscarEntregador(req.params.id)) throw naoEncontrado();
+  if (!(await Usuario.buscarEntregador(req.params.id))) throw naoEncontrado();
 
   const entregador = await gravar(async () =>
     Usuario.atualizar(req.params.id, {
@@ -71,9 +70,9 @@ export async function atualizar(req, res) {
 
 export async function definirAtivo(req, res) {
   const { ativo } = req.dados;
-  const atual = Usuario.buscarEntregador(req.params.id);
+  const atual = await Usuario.buscarEntregador(req.params.id);
   if (!atual) throw naoEncontrado();
-  if (!ativo && Pedido.listarEmEntregaCom(atual.id).length > 0) {
+  if (!ativo && (await Pedido.listarEmEntregaCom(atual.id)).length > 0) {
     throw comEntregaNaRua("desativar");
   }
 
@@ -90,9 +89,9 @@ export async function definirAtivo(req, res) {
 }
 
 export async function remover(req, res) {
-  const atual = Usuario.buscarEntregador(req.params.id);
+  const atual = await Usuario.buscarEntregador(req.params.id);
   if (!atual) throw naoEncontrado();
-  if (Pedido.listarEmEntregaCom(atual.id).length > 0) {
+  if ((await Pedido.listarEmEntregaCom(atual.id)).length > 0) {
     throw comEntregaNaRua("excluir");
   }
 

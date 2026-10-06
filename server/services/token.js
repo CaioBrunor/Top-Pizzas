@@ -19,19 +19,24 @@ export function emitirToken(usuario) {
  * se a conta não existir mais, tiver mudado de papel ou sido desativada desde
  * a emissão.
  */
-export function usuarioDoToken(token) {
+export async function usuarioDoToken(token) {
   if (typeof token !== "string" || !token) return null;
+
+  let conteudo;
   try {
     // O algoritmo é fixado para um token forjado não escolher outro.
-    const conteudo = jwt.verify(token, config.jwt.segredo, {
+    conteudo = jwt.verify(token, config.jwt.segredo, {
       algorithms: [ALGORITMO],
       issuer: config.jwt.emissor,
     });
-    const usuario = Usuario.buscarPorId(conteudo.sub);
-    if (!usuario || usuario.papel !== conteudo.papel) return null;
-    if (usuario.ativo === false) return null;
-    return { usuario: Usuario.publico(usuario), expiraEm: conteudo.exp * 1000 };
   } catch {
     return null;
   }
+
+  // Fora do try de propósito: se o banco falhar, o erro aparece como erro do
+  // servidor, e não como "sua sessão terminou".
+  const usuario = await Usuario.buscarPorId(conteudo.sub);
+  if (!usuario || usuario.papel !== conteudo.papel) return null;
+  if (usuario.ativo === false) return null;
+  return { usuario: Usuario.publico(usuario), expiraEm: conteudo.exp * 1000 };
 }

@@ -1,0 +1,17 @@
+# MongoDB local para desenvolvimento:  docker compose up -d
+# Para parar:                          docker compose down
+# (os dados ficam no volume "mongo-dados" e sobrevivem ao `down`;
+#  para apagar tudo: docker compose down -v)
+services:
+  mongo:
+    image: mongo:7
+    container_name: top-pizzas-mongo
+    restart: unless-stopped
+    ports:
+      # Só a própria máquina acessa o banco.
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-dados:/data/db
+
+volumes:
+  mongo-dados:

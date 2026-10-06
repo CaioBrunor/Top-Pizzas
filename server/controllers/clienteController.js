@@ -3,18 +3,20 @@ import * as Pedido from "../models/Pedido.js";
 import * as Usuario from "../models/Usuario.js";
 
 /** Contas de clientes com o resumo dos pedidos de cada uma. */
-export function listar(req, res) {
-  const pedidos = Pedido.listar();
+export async function listar(req, res) {
+  const [contas, resumos] = await Promise.all([
+    Usuario.listarClientes(),
+    Pedido.resumoPorCliente(),
+  ]);
 
-  const clientes = Usuario.listarClientes().map((conta) => {
-    const dele = pedidos.filter((p) => p.clienteId === conta.id);
-    const validos = dele.filter((p) => p.status !== "cancelado");
+  const clientes = contas.map((conta) => {
+    const resumo = resumos.get(conta.id);
 
     return {
       ...Usuario.publico(conta),
-      pedidos: validos.length,
-      gastoTotal: arredondar(validos.reduce((soma, p) => soma + p.total, 0)),
-      ultimoPedido: dele[0]?.criadoEm ?? null,
+      pedidos: resumo?.pedidos ?? 0,
+      gastoTotal: arredondar(resumo?.gastoTotal ?? 0),
+      ultimoPedido: resumo?.ultimoPedido ?? null,
     };
   });
 
