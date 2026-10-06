@@ -39,17 +39,23 @@ export function iniciarTempoReal(servidorHttp) {
   // (cliente, painel, entregador), então cada token é conferido por conta
   // própria. Token inválido não derruba a conexão: só não dá acesso às salas
   // privadas.
-  io.use((socket, proximo) => {
+  io.use(async (socket, proximo) => {
     const { tokenCliente, tokenAdmin, tokenEntregador } =
       socket.handshake.auth ?? {};
-    const sessaoDe = (token, papel) => {
-      const sessao = usuarioDoToken(token);
-      return sessao?.usuario.papel === papel ? sessao : null;
+    const sessaoDe = async (token, papel) => {
+      try {
+        const sessao = await usuarioDoToken(token);
+        return sessao?.usuario.papel === papel ? sessao : null;
+      } catch (erro) {
+        // Banco indisponível: a conexão segue, só sem as salas privadas.
+        console.error(`[tempo real] não foi possível conferir o token: ${erro.message}`);
+        return null;
+      }
     };
 
-    socket.data.cliente = sessaoDe(tokenCliente, "cliente");
-    socket.data.admin = sessaoDe(tokenAdmin, "admin");
-    socket.data.entregador = sessaoDe(tokenEntregador, "entregador");
+    socket.data.cliente = await sessaoDe(tokenCliente, "cliente");
+    socket.data.admin = await sessaoDe(tokenAdmin, "admin");
+    socket.data.entregador = await sessaoDe(tokenEntregador, "entregador");
     proximo();
   });
 

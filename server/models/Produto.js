@@ -1,7 +1,42 @@
 import { randomBytes } from "node:crypto";
-import { criarColecao } from "./colecao.js";
+import mongoose from "mongoose";
+import { CATEGORIAS } from "../../shared/catalogo.js";
+import { ehDuplicado, paraObjeto } from "./util.js";
+import * as Meta from "./Meta.js";
 
-const produtos = criarColecao("produtos");
+const preco = { type: Number, min: 0 };
+
+const produtoSchema = new mongoose.Schema(
+  {
+    _id: { type: String, required: true }, // "margherita", "quatro-queijos"...
+    nome: { type: String, required: true, trim: true },
+    categoria: {
+      type: String,
+      required: true,
+      enum: CATEGORIAS.map((c) => c.id),
+    },
+    tipo: { type: String, required: true, enum: ["pizza", "bebida"] },
+    imagem: { type: String, default: null },
+    descricao: { type: String, default: "" },
+    precos: { broto: preco, media: preco, grande: preco, unico: preco },
+    tempoPreparo: { type: Number, default: 0, min: 0 },
+    disponivel: { type: Boolean, default: true },
+    destaque: { type: Boolean, default: false },
+    tags: { type: [String], default: [] },
+    // Posição no cardápio: o produto novo entra no topo (ordem menor).
+    ordem: { type: Number, default: 0 },
+    criadoEm: { type: String, required: true },
+    atualizadoEm: { type: String, required: true },
+  },
+  { collection: "produtos", versionKey: false },
+);
+
+produtoSchema.index({ ordem: 1 });
+
+const Produto = mongoose.model("Produto", produtoSchema);
+
+// A posição é só de uso interno: o site não precisa dela.
+const converter = (doc) => paraObjeto(doc, { omitir: ["ordem"] });
 
 const slug = (texto) =>
   texto
@@ -12,63 +47,84 @@ const slug = (texto) =>
     .replace(/^-|-$/g, "")
     .slice(0, 60);
 
-function idLivre(nome, lista) {
-  const base = slug(nome) || `produto-${randomBytes(3).toString("hex")}`;
+const sufixoAleatorio = () => randomBytes(3).toString("hex");
+
+async function idLivre(nome) {
+  const base = slug(nome) || `produto-${sufixoAleatorio()}`;
+  const usados = new Set(
+    (await Produto.find({ _id: new RegExp(`^${base}(-\\d+)?$`) }, { _id: 1 }).lean()).map(
+      (p) => p._id,
+    ),
+  );
   let id = base;
-  for (let n = 2; lista.some((p) => p.id === id); n += 1) id = `${base}-${n}`;
+  for (let n = 2; usados.has(id); n += 1) id = `${base}-${n}`;
   return id;
 }
 
-export const foiSemeado = () => produtos.existe();
+export const foiSemeado = () => Meta.foiSemeado("produtos");
 
-export function listar() {
-  return produtos.ler();
+export async function listar() {
+  const lista = await Produto.find().sort({ ordem: 1, criadoEm: -1 }).lean();
+  return lista.map(converter);
 }
 
-export function buscarPorId(id) {
-  return produtos.ler().find((p) => p.id === id) ?? null;
+export async function buscarPorId(id) {
+  if (typeof id !== "string" || !id) return null;
+  return converter(await Produto.findById(id).lean());
 }
 
 export async function criar(dados) {
-  const lista = produtos.ler();
+  const topo = await Produto.findOne().sort({ ordem: 1 }).select("ordem").lean();
   const agora = new Date().toISOString();
-  const produto = {
-    ...dados,
-    id: idLivre(dados.nome, lista),
-    criadoEm: agora,
-    atualizadoEm: agora,
-  };
 
-  lista.unshift(produto);
-  await produtos.gravar(lista);
-  return produto;
+  // Dois produtos com o mesmo nome criados juntos disputam o mesmo id: quem
+  // perde tenta de novo com o próximo livre.
+  for (let tentativa = 1; ; tentativa += 1) {
+    try {
+      const produto = await Produto.create({
+        ...dados,
+        _id: await idLivre(dados.nome),
+        ordem: (topo?.ordem ?? 0) - 1,
+        criadoEm: agora,
+        atualizadoEm: agora,
+      });
+      return converter(produto.toObject());
+    } catch (erro) {
+      if (!ehDuplicado(erro) || tentativa === 3) throw erro;
+    }
+  }
 }
 
 export async function atualizar(id, alteracoes) {
-  const lista = produtos.ler();
-  const indice = lista.findIndex((p) => p.id === id);
-  if (indice === -1) return null;
+  if (typeof id !== "string" || !id) return null;
 
-  lista[indice] = {
-    ...lista[indice],
-    ...alteracoes,
+  // `$set` troca o objeto `precos` inteiro: ao mudar de pizza para bebida, os
+  // tamanhos antigos somem.
+  const atualizado = await Produto.findByIdAndUpdate(
     id,
-    atualizadoEm: new Date().toISOString(),
-  };
-
-  await produtos.gravar(lista);
-  return lista[indice];
+    { $set: { ...alteracoes, atualizadoEm: new Date().toISOString() } },
+    { returnDocument: "after", runValidators: true, lean: true },
+  );
+  return converter(atualizado);
 }
 
 export async function remover(id) {
-  const lista = produtos.ler();
-  const restante = lista.filter((p) => p.id !== id);
-  if (restante.length === lista.length) return false;
-
-  await produtos.gravar(restante);
-  return true;
+  if (typeof id !== "string" || !id) return false;
+  const apagado = await Produto.findByIdAndDelete(id).lean();
+  return apagado !== null;
 }
 
+/** Troca o cardápio inteiro, mantendo a ordem em que a lista veio. */
 export async function substituirTodos(lista) {
-  await produtos.gravar(lista);
+  await Produto.deleteMany({});
+  if (lista.length > 0) {
+    await Produto.insertMany(
+      lista.map(({ id, ...resto }, indice) => ({
+        ...resto,
+        _id: id,
+        ordem: indice,
+      })),
+    );
+  }
+  await Meta.marcarSemeado("produtos");
 }

@@ -10,7 +10,7 @@ import { conferirSenha, gerarHash } from "./senha.js";
 // ADMIN_SENHA e reiniciar o servidor atualiza o acesso.
 async function garantirAdmin() {
   const { usuario, senha } = config.admin;
-  const admin = Usuario.buscarAdmin();
+  const admin = await Usuario.buscarAdmin();
 
   if (!admin) {
     const senhaInicial = senha ?? randomBytes(9).toString("base64url");
@@ -60,20 +60,14 @@ async function gravarExemplos() {
 
 /** Roda uma vez quando o servidor sobe. */
 export async function prepararDados() {
-  // Lê tudo uma vez para um arquivo de dados quebrado aparecer logo na
-  // inicialização, e não no meio de um pedido.
-  Usuario.listar();
-  Produto.listar();
-  Pedido.listar();
-
   await garantirAdmin();
 
-  if (!Produto.foiSemeado()) {
+  if (!(await Produto.foiSemeado())) {
     await Produto.substituirTodos(catalogoInicial());
     console.log("[dados] cardápio inicial gravado");
   }
 
-  if (!Pedido.foiSemeado()) {
+  if (!(await Pedido.foiSemeado())) {
     if (config.dadosDeExemplo) {
       await gravarExemplos();
       console.log("[dados] clientes, entregadores e pedidos de exemplo gravados");
@@ -81,6 +75,9 @@ export async function prepararDados() {
       await Pedido.substituirTodos([]);
     }
   }
+
+  // Os próximos códigos de pedido continuam depois do maior já existente.
+  await Pedido.sincronizarCodigos();
 }
 
 /**

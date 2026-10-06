@@ -21,6 +21,8 @@ const lista = (valor, padrao) =>
     .map((item) => item.trim().replace(/\/$/, ""))
     .filter(Boolean);
 
+// Os dados ficam no MongoDB. Esta pasta guarda só o segredo do JWT gerado
+// automaticamente (quando JWT_SECRET não está no .env).
 const pastaDados = resolve(RAIZ, env.DADOS_DIR ?? "server/data");
 
 // Sem JWT_SECRET no ambiente, o servidor cria um segredo aleatório e guarda
@@ -53,6 +55,10 @@ export const config = {
   porta: inteiro(env.PORT, 3333),
   pastaDados,
   pastaSite: join(RAIZ, "dist"),
+
+  // Endereço do MongoDB. Local: mongodb://127.0.0.1:27017/top-pizzas
+  // Atlas: mongodb+srv://usuario:senha@cluster.xxxxx.mongodb.net/top-pizzas
+  mongodbUri: env.MONGODB_URI?.trim() || "mongodb://127.0.0.1:27017/top-pizzas",
 
   // Sites que podem chamar a API de outro endereço. O próprio servidor e
   // ferramentas sem navegador (curl, testes) não dependem desta lista.

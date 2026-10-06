@@ -27,7 +27,7 @@ async function abrirSessao(res, usuario, status = 200) {
 
 export async function cadastrar(req, res) {
   const { nome, email, telefone, senha } = req.dados;
-  if (Usuario.buscarPorEmail(email)) throw emailEmUso();
+  if (await Usuario.buscarPorEmail(email)) throw emailEmUso();
 
   let usuario;
   try {
@@ -48,7 +48,7 @@ export async function cadastrar(req, res) {
 
 export async function entrar(req, res) {
   const { email, senha } = req.dados;
-  const conta = Usuario.buscarPorEmail(email);
+  const conta = await Usuario.buscarPorEmail(email);
   const cliente = conta?.papel === "cliente" ? conta : null;
 
   if (!(await conferirSenha(senha, cliente?.senhaHash))) {
@@ -59,7 +59,7 @@ export async function entrar(req, res) {
 
 export async function entrarAdmin(req, res) {
   const { usuario, senha } = req.dados;
-  const admin = Usuario.buscarAdmin();
+  const admin = await Usuario.buscarAdmin();
   const hash = admin?.usuario === usuario ? admin.senhaHash : null;
 
   if (!(await conferirSenha(senha, hash))) {
@@ -70,7 +70,7 @@ export async function entrarAdmin(req, res) {
 
 export async function entrarEntregador(req, res) {
   const { telefone, senha } = req.dados;
-  const conta = Usuario.buscarEntregadorPorTelefone(telefone);
+  const conta = await Usuario.buscarEntregadorPorTelefone(telefone);
   // Entregador desativado pelo painel não entra, mesmo com a senha certa.
   const entregador = conta?.ativo ? conta : null;
 
