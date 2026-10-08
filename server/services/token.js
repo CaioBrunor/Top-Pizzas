@@ -14,11 +14,6 @@ export function emitirToken(usuario) {
   });
 }
 
-/**
- * Descobre de quem é o token. Devolve null se ele for inválido, vencido, ou
- * se a conta não existir mais, tiver mudado de papel ou sido desativada desde
- * a emissão.
- */
 export async function usuarioDoToken(token) {
   if (typeof token !== "string" || !token) return null;
 

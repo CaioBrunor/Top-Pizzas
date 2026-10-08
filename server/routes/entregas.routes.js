@@ -9,7 +9,6 @@ import { limiteDePosicao } from "../middlewares/seguranca.js";
 import { validar } from "../middlewares/validar.js";
 import { codigoSchema, posicaoSchema } from "../validators/entregador.js";
 
-// Área do entregador: só enxerga e mexe nas entregas que estão com ele.
 const rotas = Router();
 
 rotas.use(autenticar, exigirPapel("entregador"));

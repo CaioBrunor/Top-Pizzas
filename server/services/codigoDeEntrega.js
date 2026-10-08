@@ -16,7 +16,6 @@ export function gerarCodigo() {
   );
 }
 
-/** Confere o código informado pelo cliente. Lança erro se não bater. */
 export function conferirCodigo(pedido, codigo) {
   const registro = erros.get(pedido.id);
   if (registro?.bloqueadoAte > Date.now()) {

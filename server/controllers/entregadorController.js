@@ -6,8 +6,6 @@ import { gerarHash } from "../services/senha.js";
 import { avisarAdmins, desconectarEntregador } from "../services/tempoReal.js";
 import { entregadorParaPainel } from "../services/visoes.js";
 
-// Cadastro dos entregadores, feito pelo painel.
-
 const naoEncontrado = () => new ErroHttp(404, "Entregador não encontrado.");
 
 const telefoneEmUso = () =>
@@ -77,7 +75,6 @@ export async function definirAtivo(req, res) {
   }
 
   const entregador = await Usuario.atualizar(atual.id, { ativo });
-  // Desativado perde o acesso na hora: o token deixa de valer e a conexão cai.
   if (!ativo) {
     esquecerPosicao(atual.id);
     desconectarEntregador(atual.id);

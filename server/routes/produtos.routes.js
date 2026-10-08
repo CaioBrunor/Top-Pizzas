@@ -14,7 +14,6 @@ import { disponibilidadeSchema, produtoSchema } from "../validators/produto.js";
 const rotas = Router();
 const soAdmin = [autenticar, exigirPapel("admin")];
 
-// O cardápio é público.
 rotas.get("/", listar);
 rotas.get("/:id", detalhar);
 

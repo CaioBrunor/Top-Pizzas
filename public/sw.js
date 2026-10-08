@@ -32,8 +32,6 @@ self.addEventListener("install", (evento) => {
   );
 });
 
-// Ativação: apaga os arquivos principais das versões anteriores e assume as
-// abas que já estão abertas.
 self.addEventListener("activate", (evento) => {
   evento.waitUntil(
     (async () => {
@@ -49,7 +47,6 @@ self.addEventListener("activate", (evento) => {
 });
 
 self.addEventListener("message", (evento) => {
-  // Enviado pelo botão "Atualizar agora": a versão nova entra na hora.
   if (evento.data?.tipo === "ATIVAR_AGORA") self.skipWaiting();
   if (evento.data?.tipo === "GUARDAR_FOTOS") {
     evento.waitUntil(guardarFotos(evento.data.urls));
@@ -68,8 +65,6 @@ self.addEventListener("fetch", (evento) => {
   // localStorage.
   if (doSite && /^\/(api|socket\.io)\//.test(url.pathname)) return;
 
-  // Qualquer rota do site (/cardapio, /conta, /admin/painel...) é a mesma
-  // página, resolvida no navegador.
   if (request.mode === "navigate") {
     if (doSite && !/\.[a-z0-9]+$/i.test(url.pathname)) {
       evento.respondWith(paginaDoSite(request));
@@ -105,8 +100,6 @@ async function paginaDoSite(request) {
 
 const podeGuardar = (resposta) => resposta.ok || resposta.type === "opaque";
 
-// Arquivos que não mudam (têm um código no nome): o cache responde e a rede
-// só é usada na primeira vez.
 async function doCacheOuDaRede(request, nomeDoCache) {
   const cache = await caches.open(nomeDoCache);
   const guardada = await cache.match(request, { ignoreVary: true });
@@ -117,8 +110,6 @@ async function doCacheOuDaRede(request, nomeDoCache) {
   return resposta;
 }
 
-// Fotos e folha de fontes: responde na hora com o que está guardado e busca
-// uma cópia nova em segundo plano para a próxima visita.
 async function doCacheEAtualiza(evento, nomeDoCache) {
   const cache = await caches.open(nomeDoCache);
   const guardada = await cache.match(evento.request, { ignoreVary: true });

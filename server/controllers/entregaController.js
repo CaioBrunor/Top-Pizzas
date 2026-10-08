@@ -6,9 +6,6 @@ import { esquecerPosicao, registrarPosicao } from "../services/rastreio.js";
 import { avisarPedido, avisarPosicao } from "../services/tempoReal.js";
 import { pedidoParaEntregador } from "../services/visoes.js";
 
-// O que o entregador faz pelo celular: ver as entregas que estão com ele,
-// mandar a posição e fechar a entrega com o código do cliente.
-
 const inicioDeHoje = () => {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -33,7 +30,6 @@ export async function listar(req, res) {
 export async function registrarLocalizacao(req, res) {
   const naRua = await Pedido.listarEmEntregaCom(req.usuario.id);
 
-  // Sem pedido na rua, o servidor não guarda nem repassa onde ele está.
   if (naRua.length === 0) {
     esquecerPosicao(req.usuario.id);
   } else {

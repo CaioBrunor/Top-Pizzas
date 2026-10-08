@@ -23,7 +23,6 @@ export const email = z
   .max(254, "Confira o e-mail.")
   .regex(REGEX_EMAIL, "Confira o e-mail.");
 
-// Aceita o telefone com ou sem máscara e guarda sempre no mesmo formato.
 export const telefone = z
   .string("Telefone incompleto.")
   .max(30, "Telefone incompleto.")

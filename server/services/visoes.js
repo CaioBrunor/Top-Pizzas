@@ -13,7 +13,6 @@ export function pedidoParaCliente(pedido) {
     codigoEntrega: pedidoEmAberto(pedido.status)
       ? (pedido.codigoEntrega ?? null)
       : null,
-    // Onde o entregador está, só enquanto ele leva este pedido.
     rastreio: naRua ? posicaoDe(pedido.entregador.id) : null,
   };
 }
@@ -39,7 +38,6 @@ export function pedidoParaEntregador(pedido) {
   };
 }
 
-/** O que o cliente e o histórico do pedido guardam sobre quem entregou. */
 export function resumoDoEntregador(entregador) {
   return {
     id: entregador.id,

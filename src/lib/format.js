@@ -1,6 +1,5 @@
 import { VERSAO_CATALOGO } from "../data/catalogo";
 
-// As etapas do pedido são as mesmas no site e no servidor.
 export {
   DIGITOS_DO_CODIGO,
   FLUXO_STATUS,
@@ -35,7 +34,6 @@ export const hora = (iso) =>
     new Date(iso),
   );
 
-// "agora", "há 40 s", "há 3 min": usado para dizer de quando é a posição.
 export function haQuantoTempo(iso, agora = Date.now()) {
   const segundos = Math.max(0, Math.round((agora - new Date(iso).getTime()) / 1000));
   if (segundos < 10) return "agora";

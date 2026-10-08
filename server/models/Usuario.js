@@ -15,8 +15,6 @@ const enderecoSchema = new mongoose.Schema(
   { _id: false },
 );
 
-// Clientes, entregadores e a conta do painel ficam na mesma coleção, separados
-// pelo `papel`. Cada papel guarda só o que usa, como antes.
 const usuarioSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
@@ -94,8 +92,6 @@ async function conferirTelefone(telefone, ignorarId = null) {
   if (repetido) throw new TelefoneEmUso();
 }
 
-// Traduz o erro de índice único do banco para o erro que o resto do servidor
-// já conhece.
 function traduzirDuplicado(erro) {
   if (!ehDuplicado(erro)) return erro;
   return "email" in (erro.keyPattern ?? {}) ? new EmailEmUso() : new TelefoneEmUso();
@@ -146,7 +142,6 @@ export async function criar(dados) {
       nome: dados.nome,
       telefone: dados.telefone ?? "",
       senhaHash: dados.senhaHash ?? null,
-      // Cada papel guarda só o que usa.
       ...(dados.papel === "entregador"
         ? {
             veiculo: dados.veiculo ?? "",
@@ -172,7 +167,6 @@ export async function criar(dados) {
 export async function atualizar(id, alteracoes) {
   if (!texto(id)) return null;
 
-  // `id` e `papel` nunca mudam. O endereço é mesclado campo a campo.
   const { id: _id, papel: _papel, endereco, ...resto } = alteracoes;
   const mudanca = semIndefinidos({
     ...resto,
@@ -209,7 +203,6 @@ export async function removerDeExemplo() {
   await Usuario.deleteMany({ demo: true });
 }
 
-/** O usuário como pode sair do servidor: sem o hash da senha. */
 export function publico(usuario) {
   const { senhaHash, ...resto } = usuario;
   return resto;

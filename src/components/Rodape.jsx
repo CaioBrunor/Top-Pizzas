@@ -46,7 +46,6 @@ export default function Rodape() {
           </Link>
         </div>
 
-        {/* Só aparece quando o navegador permite instalar o site como app. */}
         {instalavel && (
           <div className="rodape__bloco">
             <p className="rodape__titulo">Aplicativo</p>

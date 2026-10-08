@@ -51,7 +51,6 @@ async function registrar() {
 
 export function prepararPwa() {
   window.addEventListener("beforeinstallprompt", (evento) => {
-    // Guarda o convite do navegador para mostrar no botão "Instalar".
     evento.preventDefault();
     conviteDeInstalacao = evento;
     mudar({ instalavel: true });

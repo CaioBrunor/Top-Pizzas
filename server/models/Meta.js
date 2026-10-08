@@ -27,7 +27,6 @@ export async function marcarSemeado(chave) {
   );
 }
 
-/** Próximo número da sequência, sem repetir mesmo com pedidos simultâneos. */
 export async function proximoNumero(chave) {
   const { seq } = await Meta.findOneAndUpdate(
     { _id: `sequencia:${chave}` },
@@ -37,7 +36,6 @@ export async function proximoNumero(chave) {
   return seq;
 }
 
-/** Garante que a sequência nunca fique abaixo de `minimo`. */
 export async function garantirSequenciaMinima(chave, minimo) {
   await Meta.updateOne(
     { _id: `sequencia:${chave}` },

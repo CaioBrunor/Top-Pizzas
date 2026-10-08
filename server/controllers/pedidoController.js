@@ -19,7 +19,6 @@ import {
 
 const pedidoNaoEncontrado = () => new ErroHttp(404, "Pedido não encontrado.");
 
-// Só entregador ativo pode receber um pedido.
 async function entregadorDisponivel(id) {
   const entregador = id ? await Usuario.buscarEntregador(id) : null;
   if (!entregador?.ativo) {
@@ -57,7 +56,6 @@ export async function criar(req, res) {
       email: req.usuario.email,
     },
     ...montado,
-    // O código que o cliente informa ao entregador na hora de receber.
     codigoEntrega: montado.entrega.tipo === "entrega" ? gerarCodigo() : null,
     entregador: null,
     confirmacao: null,
@@ -127,7 +125,6 @@ export async function atualizarStatus(req, res) {
       // Pedido feito antes de existir o código ganha o seu ao sair.
       alteracoes.codigoEntrega = atual.codigoEntrega ?? gerarCodigo();
     }
-    // Pelo painel a entrega é fechada sem o código do cliente. Fica anotado.
     if (status === "entregue") {
       alteracoes.confirmacao = { tipo: "painel", em: new Date().toISOString() };
     }
@@ -148,7 +145,6 @@ export async function atualizarStatus(req, res) {
   res.json({ pedido: pedidoParaPainel(pedido) });
 }
 
-/** Troca quem está levando um pedido que já saiu. */
 export async function definirEntregador(req, res) {
   const atual = await Pedido.buscarPorId(req.params.id);
   if (!atual) throw pedidoNaoEncontrado();

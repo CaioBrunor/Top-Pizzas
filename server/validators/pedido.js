@@ -59,6 +59,5 @@ export const statusSchema = z.object({
     STATUS_PEDIDO.map((s) => s.id),
     "Status desconhecido.",
   ),
-  // Quem leva o pedido. Só é usado quando ele sai para entrega.
   entregadorId: z.string().min(1).max(80).optional(),
 });

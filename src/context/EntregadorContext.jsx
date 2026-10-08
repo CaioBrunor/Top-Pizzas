@@ -105,13 +105,9 @@ function useLocalizacao(ligada) {
   return estado;
 }
 
-// O que o entregador vê: as entregas que estão com ele e as que já fez hoje.
-// Fica dentro da área do entregador, então só carrega com ele logado.
 export function EntregadorProvider({ children }) {
   const { entregador } = useAuth();
 
-  // A última cópia fica no localStorage: o endereço continua na tela mesmo
-  // se o celular perder o sinal no caminho.
   const [dados, setDados] = useState(() => {
     const salvo = ler("minhasEntregas", null);
     return salvo?.entregadorId === entregador.id && Array.isArray(salvo.entregas)
@@ -163,7 +159,6 @@ export function EntregadorProvider({ children }) {
       }
     };
 
-    // A entrega saiu da lista: foi concluída, cancelada ou passou para outro.
     const aoEncerrar = ({ id, status }) => {
       if (confirmandoRef.current !== id) {
         const motivos = {
@@ -191,7 +186,6 @@ export function EntregadorProvider({ children }) {
     };
   }, [sincronizar]);
 
-  // Lança o erro para a tela mostrar ao lado do campo do código.
   const confirmar = useCallback(async (id, codigo) => {
     confirmandoRef.current = id;
     try {
@@ -212,7 +206,6 @@ export function EntregadorProvider({ children }) {
     }
   }, []);
 
-  // A posição só é compartilhada enquanto há pedido na rua com ele.
   const temEntrega = dados.entregas.length > 0;
   const localizacao = useLocalizacao(temEntrega && compartilhar);
 

@@ -17,10 +17,6 @@ export class ErroApi extends Error {
   }
 }
 
-/**
- * Chama a API. `escopo` diz qual sessão manda o token: "cliente" para a área
- * do cliente, "admin" para o painel. Sem escopo, a chamada é pública.
- */
 export async function api(caminho, { metodo = "GET", corpo, escopo } = {}) {
   const sessao = escopo ? lerSessao(escopo) : null;
   if (escopo && !sessao) {
@@ -49,8 +45,6 @@ export async function api(caminho, { metodo = "GET", corpo, escopo } = {}) {
     resposta.status === 204 ? null : await resposta.json().catch(() => null);
   if (resposta.ok) return dados;
 
-  // O servidor recusou o token (venceu ou a conta não existe mais): encerra a
-  // sessão guardada para as telas protegidas voltarem ao login.
   if (resposta.status === 401 && sessao && lerSessao(escopo)?.token === sessao.token) {
     limparSessao(escopo);
   }

@@ -32,7 +32,6 @@ servidor.listen(config.porta, () => {
   );
 });
 
-// Ao encerrar, fecha a conexão com o banco.
 for (const sinal of ["SIGINT", "SIGTERM"]) {
   process.on(sinal, async () => {
     servidor.close();

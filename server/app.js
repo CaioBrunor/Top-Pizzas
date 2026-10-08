@@ -33,8 +33,6 @@ function servirSite(app) {
 
   app.use(express.static(config.pastaSite, { index: false, setHeaders: cacheDoArquivo }));
 
-  // As rotas do site (/cardapio, /admin/painel...) são resolvidas no navegador
-  // pelo React Router, então todas recebem a mesma página.
   app.use((req, res, next) => {
     const ehPagina =
       (req.method === "GET" || req.method === "HEAD") &&

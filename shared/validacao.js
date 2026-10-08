@@ -1,6 +1,3 @@
-// Regras de cadastro usadas pelos formulários do site e conferidas de novo
-// pelo servidor.
-
 export const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const REGEX_NOME = /^\p{L}[\p{L}\p{M}\s.'-]*$/u;
 

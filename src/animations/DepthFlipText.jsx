@@ -70,7 +70,6 @@ const DepthFlipText = ({
       const nextEl = nextRef.current;
       if (!fontsReady || !currentEl || !nextEl) return;
 
-      // Parado: mostra a frase atual e não agenda ciclo nenhum.
       if (!ativo) return;
 
       const currentSplit = SplitText.create(currentEl, {

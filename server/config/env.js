@@ -56,12 +56,8 @@ export const config = {
   pastaDados,
   pastaSite: join(RAIZ, "dist"),
 
-  // Endereço do MongoDB. Local: mongodb://127.0.0.1:27017/top-pizzas
-  // Atlas: mongodb+srv://usuario:senha@cluster.xxxxx.mongodb.net/top-pizzas
   mongodbUri: env.MONGODB_URI?.trim() || "mongodb://127.0.0.1:27017/top-pizzas",
 
-  // Sites que podem chamar a API de outro endereço. O próprio servidor e
-  // ferramentas sem navegador (curl, testes) não dependem desta lista.
   origensPermitidas: lista(
     env.ORIGENS_PERMITIDAS,
     "http://localhost:5173,http://127.0.0.1:5173",
@@ -75,7 +71,6 @@ export const config = {
   jwt: {
     segredo: segredoJwt(),
     emissor: "top-pizzas",
-    // Quanto tempo a sessão de cada papel dura.
     validade: {
       cliente: env.JWT_VALIDADE_CLIENTE ?? "7d",
       admin: env.JWT_VALIDADE_ADMIN ?? "8h",

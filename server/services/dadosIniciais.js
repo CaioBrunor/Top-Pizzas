@@ -58,7 +58,6 @@ async function gravarExemplos() {
   await Pedido.substituirTodos(pedidos);
 }
 
-/** Roda uma vez quando o servidor sobe. */
 export async function prepararDados() {
   await garantirAdmin();
 
@@ -76,7 +75,6 @@ export async function prepararDados() {
     }
   }
 
-  // Os próximos códigos de pedido continuam depois do maior já existente.
   await Pedido.sincronizarCodigos();
 }
 

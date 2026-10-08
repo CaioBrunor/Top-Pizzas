@@ -58,8 +58,6 @@ function prepararServiceWorker() {
 }
 
 export default defineConfig(({ mode }) => {
-  // A API roda em outro processo (npm run dev sobe os dois). O Vite repassa
-  // as chamadas para ela, então o navegador enxerga um endereço só.
   const env = loadEnv(mode, process.cwd(), "");
   const api = `http://localhost:${env.PORT || 3333}`;
   const proxy = {

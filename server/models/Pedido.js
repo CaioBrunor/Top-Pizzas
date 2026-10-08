@@ -123,7 +123,6 @@ export async function criar(dados) {
       });
       return paraObjeto(pedido.toObject());
     } catch (erro) {
-      // Código já usado (contador atrasado): confere a sequência e tenta de novo.
       if (!ehDuplicado(erro) || tentativa === 3) throw erro;
       await sincronizarSequencia();
     }
@@ -141,7 +140,6 @@ export async function listarEmEntregaCom(entregadorId) {
   return lista.map(paraObjeto);
 }
 
-/** Entregas fechadas por este entregador a partir de `desde` (texto ISO). */
 export async function listarConcluidasDesde(entregadorId, desde) {
   const lista = await Pedido.find({
     status: "entregue",
@@ -183,7 +181,6 @@ export async function resumoPorCliente() {
   return resumos;
 }
 
-/** Muda a etapa do pedido. `alteracoes` leva o que muda junto (entregador...). */
 export async function atualizarStatus(id, status, alteracoes = {}) {
   if (typeof id !== "string" || !id) return null;
 
@@ -199,11 +196,9 @@ export async function atualizarStatus(id, status, alteracoes = {}) {
   return paraObjeto(atualizado);
 }
 
-/** Altera dados do pedido sem mudar a etapa. */
 export async function atualizar(id, alteracoes) {
   if (typeof id !== "string" || !id) return null;
 
-  // O id e a etapa não mudam por aqui.
   const { id: _id, status: _status, ...resto } = alteracoes;
   const atualizado = await Pedido.findByIdAndUpdate(
     id,

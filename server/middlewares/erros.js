@@ -9,7 +9,6 @@ const CODIGOS = {
   429: "MUITAS_TENTATIVAS",
 };
 
-/** Erro esperado, com status HTTP e mensagem que pode ser mostrada ao usuário. */
 export class ErroHttp extends Error {
   constructor(status, mensagem, { codigo, campos } = {}) {
     super(mensagem);
@@ -34,7 +33,6 @@ export function tratarErros(erro, req, res, next) {
     } else if (erro.type === "entity.too.large") {
       resposta = new ErroHttp(413, "O corpo da requisição é grande demais.");
     } else {
-      // Erro inesperado: o detalhe fica só no log do servidor.
       console.error(`[erro] ${req.method} ${req.originalUrl.split("?")[0]}`, erro);
       resposta = new ErroHttp(500, "Algo deu errado do nosso lado. Tente de novo em instantes.", {
         codigo: "ERRO_INTERNO",

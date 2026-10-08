@@ -85,7 +85,6 @@ export default function Pedidos() {
             const aberto = expandido === p.id;
             const etapa = etapaDoPedido(p);
             const naRua = p.status === "entrega" && p.entregador;
-            // Chegou pelo tempo real e ainda não foi aberto.
             const novo = novos.includes(p.id);
 
             return (
@@ -189,7 +188,6 @@ function AcoesDoPedido({ pedido }) {
   const proximo = proximoStatus(pedido.status);
   const encerrado = pedido.status === "cancelado" || pedido.status === "entregue";
   const emCasa = ehEntrega(pedido);
-  // Pedido de entrega saindo do forno: precisa de alguém para levar.
   const vaiSair = emCasa && proximo === "entrega";
   const naRua = emCasa && pedido.status === "entrega";
 

@@ -13,7 +13,6 @@ export function paraObjeto(documento, { omitir = [] } = {}) {
 /** Erro de índice único do MongoDB (valor duplicado). */
 export const ehDuplicado = (erro) => erro?.code === 11000;
 
-/** Tira as chaves com valor `undefined`, que o Mongoose não deve gravar. */
 export function semIndefinidos(objeto) {
   return Object.fromEntries(
     Object.entries(objeto).filter(([, valor]) => valor !== undefined),

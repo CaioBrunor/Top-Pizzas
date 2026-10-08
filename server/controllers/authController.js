@@ -71,7 +71,6 @@ export async function entrarAdmin(req, res) {
 export async function entrarEntregador(req, res) {
   const { telefone, senha } = req.dados;
   const conta = await Usuario.buscarEntregadorPorTelefone(telefone);
-  // Entregador desativado pelo painel não entra, mesmo com a senha certa.
   const entregador = conta?.ativo ? conta : null;
 
   if (!(await conferirSenha(senha, entregador?.senhaHash))) {

@@ -194,8 +194,6 @@ function gerarPedidos() {
       status = rnd() > 0.93 ? "cancelado" : "entregue";
     }
 
-    // Pedido que saiu para entrega tem quem levou. O entregue também tem a
-    // hora em que o cliente confirmou com o código.
     const saiu = !retirada && (status === "entrega" || status === "entregue");
     const levou = ENTREGADORES_BASE[Math.floor(sorteio() * ENTREGADORES_BASE.length)];
     const minutos = 25 + Math.floor(sorteio() * 30);
@@ -253,8 +251,6 @@ function gerarPedidos() {
   return pedidos.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 }
 
-// Cada conta fica com o endereço do pedido mais recente e passa a existir na
-// data do primeiro pedido, como aconteceria com um cliente de verdade.
 function gerarContas(pedidos) {
   return CLIENTES_BASE.map((cliente) => {
     const dele = pedidos.filter((p) => p.clienteId === idDaConta(cliente));

@@ -110,7 +110,6 @@ export function AuthProvider({ children }) {
 
   const valor = useMemo(
     () => ({
-      // área do cliente
       cliente: sessaoCliente?.usuario ?? null,
       clienteAutenticado: Boolean(sessaoCliente),
       entrarCliente,
@@ -118,12 +117,10 @@ export function AuthProvider({ children }) {
       atualizarPerfil,
       atualizarCliente,
       sairCliente,
-      // painel administrativo
       sessao: sessaoAdmin?.usuario ?? null,
       autenticado: Boolean(sessaoAdmin),
       entrar,
       sair,
-      // área do entregador
       entregador: sessaoEntregador?.usuario ?? null,
       entrarEntregador,
       sairEntregador,

@@ -38,8 +38,6 @@ export default function Produtos() {
   const abrirNovo = () => setEditando({ ...VAZIO, novo: true });
   const abrirEdicao = (p) => setEditando({ ...p, novo: false });
 
-  // Agora as duas ações valem para a loja inteira e não têm volta, então
-  // pedem confirmação.
   const excluir = (p) => {
     if (window.confirm(`Excluir "${p.nome}" do cardápio? Isso não pode ser desfeito.`)) {
       removerProduto(p.id);

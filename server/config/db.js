@@ -6,7 +6,6 @@ import { config } from "./env.js";
 mongoose.set("bufferCommands", false);
 mongoose.set("strictQuery", true);
 
-/** Endereço sem usuário e senha, para poder aparecer no terminal. */
 function enderecoSemSenha(uri) {
   return uri.replace(/\/\/[^@/]*@/, "//***@");
 }

@@ -20,7 +20,6 @@ import { IconeCheck, IconeSeta, IconeVoltar } from "../components/Icones";
 
 const ETAPAS = ["Entrega", "Pagamento", "Revisão"];
 
-// Onde fica, no formulário, cada campo que o servidor pode recusar.
 const CAMPOS_DO_SERVIDOR = {
   "contato.nome": { campo: "nome", etapa: 0 },
   "contato.telefone": { campo: "telefone", etapa: 0 },
@@ -53,7 +52,6 @@ export default function Checkout() {
   const [erroEnvio, setErroEnvio] = useState("");
   const [processando, setProcessando] = useState(false);
 
-  // Começa com os dados atuais da conta: o endereço do último pedido.
   const [dados, setDados] = useState(() => ({
     nome: cliente.nome,
     telefone: cliente.telefone,

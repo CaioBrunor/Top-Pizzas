@@ -52,8 +52,6 @@ function LayoutSite() {
   );
 }
 
-// Páginas que precisam da conta do cliente. Quem não entrou vai para o login
-// e volta para cá depois.
 function SoCliente() {
   const { clienteAutenticado } = useAuth();
   const { pathname } = useLocation();

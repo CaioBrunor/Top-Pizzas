@@ -47,7 +47,6 @@
   gap: 0.7rem;
 }
 
-/* Estado da conexão de tempo real com o servidor. */
 .admin__vivo {
   display: inline-flex;
   align-items: center;
@@ -495,7 +494,6 @@
   overflow: hidden;
 }
 
-/* Pedido que chegou pelo tempo real e ainda não foi aberto. */
 .pedido--novo {
   border-color: color-mix(in srgb, var(--accent) 65%, transparent);
   box-shadow: 0 0 0 3px rgb(var(--brilho-rgb) / 0.14);
@@ -598,7 +596,6 @@
   gap: 0.5rem;
 }
 
-/* Escolha de quem leva o pedido: ocupa a linha inteira, botões embaixo. */
 .pedido__entregador {
   flex: 1 1 100%;
 }
@@ -861,7 +858,6 @@
   }
 }
 
-/* Selo e botões dentro da célula ficam do tamanho do conteúdo. */
 .celula-pedidos {
   display: flex;
   align-items: center;

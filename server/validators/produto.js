@@ -54,7 +54,6 @@ export const produtoSchema = z
       .default([]),
   })
   .transform((dados, contexto) => {
-    // O tipo vem da categoria e decide quais preços o produto tem.
     const tipo = dados.categoria === "bebidas" ? "bebida" : "pizza";
     const exigidos = tipo === "bebida" ? ["unico"] : ["broto", "media", "grande"];
 

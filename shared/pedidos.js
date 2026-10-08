@@ -30,16 +30,13 @@ export function proximoStatus(id) {
 export const pedidoEmAberto = (status) =>
   status !== "entregue" && status !== "cancelado";
 
-/** Pedido que um entregador leva até o cliente (o contrário de retirada). */
 export const ehEntrega = (pedido) => pedido.entrega?.tipo === "entrega";
 
-// Na retirada não tem entregador, então as duas últimas etapas mudam de nome.
 const NOMES_NA_RETIRADA = {
   entrega: "Pronto para retirar",
   entregue: "Retirado",
 };
 
-/** Nome e cor de uma etapa, do jeito certo para este pedido. */
 export function etapaDoPedido(pedido, status = pedido.status) {
   const info = statusInfo(status);
   const nome = ehEntrega(pedido) ? null : NOMES_NA_RETIRADA[status];

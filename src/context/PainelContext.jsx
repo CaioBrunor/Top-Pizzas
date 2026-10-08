@@ -21,14 +21,9 @@ const inserirOuTrocar = (lista, item) =>
     ? lista.map((i) => (i.id === item.id ? item : i))
     : [item, ...lista];
 
-// Dados que só o painel enxerga: todos os pedidos, as contas dos clientes e
-// os entregadores. Fica dentro do AdminLayout, então só carrega com o admin
-// logado.
 export function PainelProvider({ children }) {
   const { recarregarCatalogo } = useLoja();
 
-  // A última cópia fica no localStorage para o painel abrir na hora e
-  // continuar legível sem internet.
   const [dados, setDados] = useState(() => {
     const salvo = ler("painel", null);
     return Array.isArray(salvo?.pedidos) && Array.isArray(salvo?.contas)
@@ -142,7 +137,6 @@ export function PainelProvider({ children }) {
     [],
   );
 
-  // `entregadorId` só é usado quando o pedido sai para entrega.
   const atualizarStatus = useCallback(
     async (id, status, entregadorId) => {
       marcarVisto(id);
@@ -179,7 +173,6 @@ export function PainelProvider({ children }) {
     }));
   }, []);
 
-  // Lança o erro para o formulário mostrar os campos recusados pelo servidor.
   const salvarEntregador = useCallback(
     async ({ id, ...corpo }) => {
       const { entregador } = id
@@ -221,7 +214,6 @@ export function PainelProvider({ children }) {
     [tentar],
   );
 
-  // Lança o erro para o formulário mostrar os campos recusados pelo servidor.
   const salvarProduto = useCallback(
     async ({ id, ...produto }) => {
       if (id) {
@@ -273,8 +265,6 @@ export function PainelProvider({ children }) {
     [tentar, sincronizar, recarregarCatalogo],
   );
 
-  // Cada conta com o resumo dos próprios pedidos, recalculado a cada pedido
-  // que chega.
   const clientes = useMemo(() => {
     const porId = new Map(
       dados.contas.map((conta) => [
@@ -306,8 +296,6 @@ export function PainelProvider({ children }) {
     );
   }, [dados]);
 
-  // Cada entregador com o que está levando agora, quantas entregas já fez e
-  // onde está.
   const entregadores = useMemo(
     () =>
       dados.entregadores

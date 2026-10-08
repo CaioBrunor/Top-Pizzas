@@ -19,7 +19,6 @@ export default function AvisosPwa() {
   const { pathname } = useLocation();
   const [recusou, setRecusou] = useState(() => ler("pwa:recusou", false));
 
-  // Com o cardápio do servidor em mãos, guarda as fotos para o modo offline.
   useEffect(() => {
     if (!catalogoSincronizado) return;
     guardarFotos(

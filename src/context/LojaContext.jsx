@@ -27,8 +27,6 @@ export function LojaProvider({ children }) {
   const { cliente, atualizarCliente } = useAuth();
   const clienteId = cliente?.id ?? null;
 
-  // Enquanto o servidor não responde (ou sem internet), a tela mostra a
-  // última cópia do cardápio guardada no navegador.
   const [produtos, setProdutos] = useState(() => {
     const salvo = ler("produtos", null);
     return salvo?.versao === VERSAO_CATALOGO && Array.isArray(salvo.lista)
@@ -98,8 +96,6 @@ export function LojaProvider({ children }) {
     }
   }, []);
 
-  // Cardápio: busca ao abrir, sempre que o tempo real (re)conecta e quando a
-  // internet volta. Entre uma busca e outra, o servidor avisa cada mudança.
   useEffect(() => {
     const aoSalvar = (produto) =>
       setProdutos((atual) =>
@@ -125,7 +121,6 @@ export function LojaProvider({ children }) {
     };
   }, [recarregarCatalogo]);
 
-  // Pedidos do cliente que está com a conta aberta.
   useEffect(() => {
     if (!clienteId) return undefined;
 
@@ -147,7 +142,6 @@ export function LojaProvider({ children }) {
             : `Pedido ${pedido.id}: ${etapa}`,
       });
     };
-    // O entregador se moveu: atualiza só o rastreio do pedido que ele leva.
     const aoMover = ({ pedidoId, posicao }) =>
       setGuardados((atual) =>
         atual?.clienteId === clienteId

@@ -1,7 +1,6 @@
 import { usuarioDoToken } from "../services/token.js";
 import { ErroHttp } from "./erros.js";
 
-/** Exige o cabeçalho "Authorization: Bearer <token>" e preenche req.usuario. */
 export async function autenticar(req, res, next) {
   const [tipo, token] = (req.get("authorization") ?? "").split(" ");
   if (tipo !== "Bearer" || !token) {
@@ -19,7 +18,6 @@ export async function autenticar(req, res, next) {
   next();
 }
 
-/** Deixa passar só quem tem um dos papéis. Vem sempre depois de `autenticar`. */
 export const exigirPapel =
   (...papeis) =>
   (req, res, next) => {

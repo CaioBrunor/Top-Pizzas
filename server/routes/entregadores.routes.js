@@ -14,7 +14,6 @@ import {
   novoEntregadorSchema,
 } from "../validators/entregador.js";
 
-// Cadastro dos entregadores: só o painel mexe.
 const rotas = Router();
 
 rotas.use(autenticar, exigirPapel("admin"));

@@ -46,7 +46,6 @@ export default function Entrar() {
     setErroGeral("");
   };
 
-  // As mesmas regras são conferidas de novo no servidor.
   const validar = () => {
     const e = {};
     const email = erroDeEmail(dados.email);

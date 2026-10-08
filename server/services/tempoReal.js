@@ -65,7 +65,6 @@ export function iniciarTempoReal(servidorHttp) {
     if (admin) socket.join(SALA_ADMIN);
     if (entregador) socket.join(salaDoEntregador(entregador.usuario.id));
 
-    // Quando o token vence, a conexão cai e o site reconecta sem ele.
     const vencimentos = [cliente, admin, entregador]
       .filter(Boolean)
       .map((s) => s.expiraEm);
@@ -121,7 +120,6 @@ export function avisarPedido(tipo, pedido, { entregadorAnterior = null } = {}) {
   }
 }
 
-/** A posição vai para o painel e para os clientes que ele está atendendo. */
 export function avisarPosicao(entregadorId, posicao, pedidosNaRua) {
   if (!io) return;
 
@@ -134,7 +132,6 @@ export function avisarPosicao(entregadorId, posicao, pedidosNaRua) {
   }
 }
 
-/** Conta desativada ou excluída: derruba as conexões abertas dela. */
 export function desconectarEntregador(entregadorId) {
   io?.in(salaDoEntregador(entregadorId)).disconnectSockets(true);
 }

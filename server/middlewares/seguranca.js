@@ -6,11 +6,6 @@ import { ErroHttp } from "./erros.js";
 
 const FONTES_GOOGLE = ["https://fonts.googleapis.com", "https://fonts.gstatic.com"];
 
-/**
- * Cabeçalhos de segurança. A política de conteúdo (CSP) só deixa o navegador
- * carregar scripts do próprio site, o que barra a maior parte dos ataques de
- * XSS mesmo se algum texto malicioso chegar à página.
- */
 export const cabecalhosDeSeguranca = helmet({
   contentSecurityPolicy: {
     useDefaults: false,
@@ -39,7 +34,6 @@ export const cabecalhosDeSeguranca = helmet({
   crossOriginEmbedderPolicy: false,
 });
 
-/** O endereço que fez a requisição pode falar com a API? */
 export function origemPermitida(origem, hospedeiro) {
   if (!origem) return true;
   if (config.origensPermitidas.includes(origem)) return true;
@@ -50,8 +44,6 @@ export function origemPermitida(origem, hospedeiro) {
   }
 }
 
-// Origens fora da lista não recebem os cabeçalhos de CORS, então o navegador
-// delas bloqueia a leitura da resposta.
 export const permitirOrigens = cors((req, responder) => {
   responder(null, {
     origin: origemPermitida(req.get("origin"), req.get("host")),
@@ -61,7 +53,6 @@ export const permitirOrigens = cors((req, responder) => {
   });
 });
 
-// Respostas da API nunca ficam guardadas em cache do navegador ou de proxies.
 export function semCache(req, res, next) {
   res.set("Cache-Control", "no-store");
   next();
@@ -97,7 +88,6 @@ export const limiteDePosicao = limitar({
   mensagem: "Posição enviada vezes demais. Espere um pouco.",
 });
 
-// Só as tentativas que falham contam: é a proteção contra adivinhar senhas.
 export const limiteDeLogin = limitar({
   janelaMinutos: 15,
   limite: config.limites.login,

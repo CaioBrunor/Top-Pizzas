@@ -182,7 +182,6 @@
   .cabecalho__acoes {
     margin-left: auto;
   }
-  /* No celular a conta vira só o ícone, do tamanho de um toque. */
   .cabecalho__conta {
     padding: 0.62rem;
   }

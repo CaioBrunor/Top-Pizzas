@@ -85,7 +85,6 @@ export default function MapaLeaflet({ pontos, area = null, rotulo = "Mapa" }) {
 
   useEffect(() => {
     const mapa = L.map(caixaRef.current, {
-      // A roda do mouse continua rolando a página, não o mapa.
       scrollWheelZoom: false,
       // Sem animação de zoom: se a tela fecha no meio de uma, o Leaflet
       // tenta terminar a animação em um mapa que não existe mais.
@@ -96,7 +95,6 @@ export default function MapaLeaflet({ pontos, area = null, rotulo = "Mapa" }) {
     L.tileLayer(MOSAICO, { attribution: CREDITO, maxZoom: 19 }).addTo(mapa);
     mapaRef.current = mapa;
 
-    // O Leaflet precisa ser avisado quando a caixa muda de tamanho.
     const observador = new ResizeObserver(() => mapa.invalidateSize());
     observador.observe(caixaRef.current);
 
@@ -136,7 +134,6 @@ export default function MapaLeaflet({ pontos, area = null, rotulo = "Mapa" }) {
       }
     }
 
-    // A região só é redesenhada quando muda de lugar.
     const chaveDaArea = area
       ? `${area.lat}|${area.lng}|${area.raio}|${area.rotulo}`
       : "";

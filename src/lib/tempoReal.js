@@ -52,7 +52,6 @@ function assinarConexao(fn) {
   };
 }
 
-/** true enquanto a conexão de tempo real está de pé. */
 export const useAoVivo = () =>
   useSyncExternalStore(assinarConexao, () => socket.connected);
 
@@ -65,6 +64,5 @@ function assinarRede(fn) {
   };
 }
 
-/** false quando o aparelho está sem internet. */
 export const useOnline = () =>
   useSyncExternalStore(assinarRede, () => navigator.onLine);

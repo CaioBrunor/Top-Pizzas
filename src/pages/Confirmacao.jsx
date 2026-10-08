@@ -245,7 +245,6 @@ export default function Confirmacao() {
   );
 }
 
-// Quem está levando, onde ele está e o código que fecha a entrega.
 function EntregaAoVivo({ pedido }) {
   const { entregador, rastreio, codigoEntrega } = pedido;
   const naRua = pedido.status === "entrega" && Boolean(entregador);
@@ -275,7 +274,6 @@ function EntregaAoVivo({ pedido }) {
     [posicaoAtual, entregador],
   );
 
-  // O endereço exato não vira coordenada: o mapa marca a região do bairro.
   const area = useMemo(
     () =>
       destino && {

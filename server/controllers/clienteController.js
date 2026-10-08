@@ -2,7 +2,6 @@ import { arredondar } from "../../shared/catalogo.js";
 import * as Pedido from "../models/Pedido.js";
 import * as Usuario from "../models/Usuario.js";
 
-/** Contas de clientes com o resumo dos pedidos de cada uma. */
 export async function listar(req, res) {
   const [contas, resumos] = await Promise.all([
     Usuario.listarClientes(),

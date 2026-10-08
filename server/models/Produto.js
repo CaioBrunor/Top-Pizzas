@@ -35,7 +35,6 @@ produtoSchema.index({ ordem: 1 });
 
 const Produto = mongoose.model("Produto", produtoSchema);
 
-// A posição é só de uso interno: o site não precisa dela.
 const converter = (doc) => paraObjeto(doc, { omitir: ["ordem"] });
 
 const slug = (texto) =>
@@ -114,7 +113,6 @@ export async function remover(id) {
   return apagado !== null;
 }
 
-/** Troca o cardápio inteiro, mantendo a ordem em que a lista veio. */
 export async function substituirTodos(lista) {
   await Produto.deleteMany({});
   if (lista.length > 0) {

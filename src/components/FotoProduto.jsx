@@ -2,8 +2,6 @@ import { useState } from "react";
 import { urlDaFoto } from "../lib/format";
 
 export default function FotoProduto({ produto, tamanho = "media" }) {
-  // Foto que não carrega (caminho errado ou sem internet e fora do cache)
-  // cai no mesmo marcador de produto sem foto.
   const [quebrada, setQuebrada] = useState(null);
 
   if (!produto.imagem || quebrada === produto.imagem) {

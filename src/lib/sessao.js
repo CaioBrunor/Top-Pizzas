@@ -42,7 +42,6 @@ export function aoMudarSessao(fn) {
   return () => ouvintes.delete(fn);
 }
 
-// Entrar ou sair em uma aba vale para todas as outras.
 for (const escopo of Object.keys(CHAVES)) {
   aoMudarEmOutraAba(CHAVES[escopo], () => {
     sessoes[escopo] = salva(escopo);
